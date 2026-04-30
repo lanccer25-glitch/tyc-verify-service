@@ -6,10 +6,11 @@ import { matchBidding, formatBiddingBlocks } from './matchers/bidding';
 import { matchPatent, formatPatentBlocks } from './matchers/patent';
 import { matchInvestment, formatInvestmentBlocks } from './matchers/investment';
 import { matchJudicial, formatJudicialBlocks } from './matchers/judicial';
-import { matchImportExport } from './matchers/import-export';
-import { matchCustomer } from './matchers/customer';
-import { matchLicense } from './matchers/license';
+import { matchImportExport, formatImportExportBlocks } from './matchers/import-export';
+import { matchCustomer, formatCustomerBlocks } from './matchers/customer';
+import { matchLicense, formatLicenseBlocks } from './matchers/license';
 import { queryBaseInfo, TycBaseInfo } from './tyc-api';
+import { formatUniversalBlocks } from './matchers/universal';
 
 export interface VerifyReport {
   status: '已核实' | '无法验证' | '已核实（仅主体）' | '已识别（待接入）';
@@ -160,23 +161,23 @@ export async function verifyNews(
 
     case 'import_export': {
       const items = await fetchItems('import_export', companyName);
-      return wrap(path, endpoint, items,
-        matchImportExport(newsText, items), await baseinfoPromise);
+      const m = matchImportExport(newsText, items);
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatImportExportBlocks(items) };
     }
     case 'customer_client': {
       const items = await fetchItems('customer_client', companyName);
-      return wrap(path, endpoint, items,
-        matchCustomer(newsText, items, 'client'), await baseinfoPromise);
+      const m = matchCustomer(newsText, items, 'client');
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatCustomerBlocks(items) };
     }
     case 'customer_supplier': {
       const items = await fetchItems('customer_supplier', companyName);
-      return wrap(path, endpoint, items,
-        matchCustomer(newsText, items, 'supplier'), await baseinfoPromise);
+      const m = matchCustomer(newsText, items, 'supplier');
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatCustomerBlocks(items) };
     }
     case 'license': {
       const items = await fetchItems('license', companyName);
-      return wrap(path, endpoint, items,
-        matchLicense(newsText, items), await baseinfoPromise);
+      const m = matchLicense(newsText, items);
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatLicenseBlocks(items) };
     }
 
     case 'baseinfo': {

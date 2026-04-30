@@ -35,6 +35,17 @@ export function matchCustomer(
   }
   return {
     matched: false,
-    reason: `返回 ${items.length} 条${role === 'client' ? '客户' : '供应商'}，但没有与短讯对手方一致的`,
+    reason: '返回 ' + items.length + ' 条' + (role === 'client' ? '客户' : '供应商') + '，但没有与短讯对手方一致的',
   };
+}
+
+export function formatCustomerBlocks(items: any[]): any[] {
+  if (!items.length) return [];
+  const top = items.slice(0, 20);
+  const blocks: any[] = [{ type: 'heading_3', heading_3: { rich_text: [{ type: 'text', text: { content: '🤝 记录（共 ' + items.length + ' 条，展示前 ' + top.length + '）' } }] } }];
+  for (let i = 0; i < top.length; i++) {
+    const it = top[i];
+    blocks.push({ type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: (i+1) + '. ' + (it.clientName||it.supplierName||it.companyName||'-') + ' | ' + (it.year||'') + ' | ' + (it.amount||'') } }] } });
+  }
+  return blocks;
 }

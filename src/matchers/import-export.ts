@@ -25,3 +25,12 @@ export function matchImportExport(newsText: string, items: any[]): MatchResult {
     }`,
   };
 }
+
+export function formatImportExportBlocks(items: any[]): any[] {
+  if (!items.length) return [];
+  const blocks: any[] = [{ type: 'heading_3', heading_3: { rich_text: [{ type: 'text', text: { content: '🚢 进出口（共 ' + items.length + ' 条）' } }] } }];
+  for (const it of items.slice(0, 10)) {
+    blocks.push({ type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: ((it.companyName||'-') + ' | 信用代码:' + (it.creditCode||'-') + ' | ' + (it.registrationDate||'') + ' | ' + (it.managementCategory||'')).slice(0,200) } }] } });
+  }
+  return blocks;
+}
