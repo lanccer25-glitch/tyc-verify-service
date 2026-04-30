@@ -110,7 +110,7 @@
     "required": ["keyword"]
   },
   "investment": {
-    "path": "open/ic/companyinvest/2.0",
+    "path": "v4/open/investEvent",
     "description": "对外投资",
     "required": ["keyword"]
   },
