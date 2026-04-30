@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  tyc-verify:
+    build: .
+    container_name: tyc-verify-service
+    restart: always
+    ports:
+      - "3100:3100"
+    env_file:
+      - .env
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

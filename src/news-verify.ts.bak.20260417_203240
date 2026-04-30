@@ -1,0 +1,77 @@
+import { queryBidding, queryPatent, queryInvestment } from './tyc-endpoints';
+import { formatBiddingBlocks } from './matchers/bidding';
+import { formatPatentBlocks } from './matchers/patent';
+import { formatInvestmentBlocks } from './matchers/investment';
+import { queryBaseInfo, TycBaseInfo } from './tyc-api';
+
+export interface VerifyReport {
+  status: '已核实' | '无法验证' | '已核实（仅主体）';
+  usedEndpoint: string;
+  items: number;
+  reason: string;
+  detailBlocks: any[]; // 可直接追加到 Notion 的 blocks
+  baseinfo?: TycBaseInfo;
+}
+
+export async function verifyNews(
+  companyName: string,
+  dynamicType: string,
+  _newsText: string,
+  _sourceUrl: string,
+): Promise<VerifyReport> {
+  const baseinfoPromise = queryBaseInfo(companyName).catch(() => undefined);
+
+  if (/招投标|中标|采购/.test(dynamicType)) {
+    const { items } = await queryBidding(companyName);
+    return {
+      status: items.length > 0 ? '已核实' : '无法验证',
+      usedEndpoint: 'open/m/bids/2.0',
+      items: items.length,
+      reason: items.length
+        ? `天眼查返回 ${items.length} 条招投标记录，已写入页面正文供核对`
+        : '天眼查未返回任何招投标记录',
+      detailBlocks: formatBiddingBlocks(items),
+      baseinfo: await baseinfoPromise,
+    };
+  }
+
+  if (/专利|发明|实用新型|外观设计/.test(dynamicType)) {
+    const { items } = await queryPatent(companyName);
+    return {
+      status: items.length > 0 ? '已核实' : '无法验证',
+      usedEndpoint: 'open/ipr/patents/3.0',
+      items: items.length,
+      reason: items.length
+        ? `天眼查返回 ${items.length} 条专利记录，已写入页面正文供核对`
+        : '天眼查未返回任何专利记录',
+      detailBlocks: formatPatentBlocks(items),
+      baseinfo: await baseinfoPromise,
+    };
+  }
+
+  if (/投资/.test(dynamicType)) {
+    const { items } = await queryInvestment(companyName);
+    return {
+      status: items.length > 0 ? '已核实' : '无法验证',
+      usedEndpoint: 'open/ic/companyinvest/2.0',
+      items: items.length,
+      reason: items.length
+        ? `天眼查返回 ${items.length} 条对外投资记录，已写入页面正文供核对`
+        : '天眼查未返回任何对外投资记录',
+      detailBlocks: formatInvestmentBlocks(items),
+      baseinfo: await baseinfoPromise,
+    };
+  }
+
+  const bi = await baseinfoPromise;
+  return {
+    status: bi ? '已核实（仅主体）' : '无法验证',
+    usedEndpoint: 'open/ic/baseinfo/normal',
+    items: bi ? 1 : 0,
+    reason: bi
+      ? `主体存在，但「${dynamicType}」暂未接入专项接口，仅作主体核实`
+      : '主体查询失败',
+    detailBlocks: [],
+    baseinfo: bi,
+  };
+}

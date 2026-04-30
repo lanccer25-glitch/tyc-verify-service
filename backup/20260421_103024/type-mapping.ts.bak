@@ -1,0 +1,62 @@
+export type EndpointKey =
+  | 'bidding'
+  | 'patent'
+  | 'investment'
+  | 'judicial'
+  | 'import_export'
+  | 'customer'
+  | 'license'
+  | 'baseinfo';
+
+export const TYPE_TO_ENDPOINT: Record<string, EndpointKey> = {
+  '新增招投标': 'bidding',
+  '公开发明公布': 'patent',
+  '授权发明授权': 'patent',
+  '新增对外投资': 'investment',
+  '退出对外投资': 'investment',
+  '持股比例上升': 'investment',
+  '持股比例下降': 'investment',
+  '新增开庭公告': 'judicial',
+  '被列入被执行人': 'judicial',
+  '被限制高消费': 'judicial',
+  '被列入失信被执行人': 'judicial',
+  '新增送达公告': 'judicial',
+  '新增进出口信用': 'import_export',
+  '新增客户': 'customer',
+  '新增供应商': 'customer',
+  '新增行政许可': 'license',
+  '企业地址变更': 'baseinfo',
+  '注册资本增加': 'baseinfo',
+  '经营范围变更': 'baseinfo',
+  '企业类型变更': 'baseinfo',
+  '法定代表人变更': 'baseinfo',
+  '新增相关公告': 'baseinfo',
+};
+
+const FALLBACK_PATTERNS: Array<[RegExp, EndpointKey]> = [
+  [/^新增法院公告/, 'judicial'],
+  [/开庭|执行|限高|失信|送达公告|裁判文书|起诉|法院|违法/, 'judicial'],
+  [/招投标|中标|采购|招标|投标/, 'bidding'],
+  [/专利|发明|实用新型|外观设计/, 'patent'],
+  [/对外投资|股东|入股|控股|参股|持股比例/, 'investment'],
+  [/客户|供应商/, 'customer'],
+  [/进出口/, 'import_export'],
+  [/行政许可|行政处罚/, 'license'],
+  [/变更|注销|吊销|增加|减少/, 'baseinfo'],
+];
+
+export const PENDING_ENDPOINTS = new Set<EndpointKey>([
+  'judicial',
+  'import_export',
+  'customer',
+  'license',
+]);
+
+export function resolveEndpoint(dynamicType: string): EndpointKey | null {
+  if (!dynamicType) return null;
+  if (TYPE_TO_ENDPOINT[dynamicType]) return TYPE_TO_ENDPOINT[dynamicType];
+  for (const [pattern, endpoint] of FALLBACK_PATTERNS) {
+    if (pattern.test(dynamicType)) return endpoint;
+  }
+  return null;
+}

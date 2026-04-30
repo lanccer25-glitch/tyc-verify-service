@@ -1,0 +1,139 @@
+import {
+  resolveEndpoint,
+  PENDING_ENDPOINTS,
+  EndpointKey,
+} from './type-mapping';
+import {
+  queryBidding,
+  queryPatent,
+  queryInvestment,
+} from './tyc-endpoints';
+import { matchBidding, formatBiddingBlocks } from './matchers/bidding';
+import { matchPatent, formatPatentBlocks } from './matchers/patent';
+import { matchInvestment, formatInvestmentBlocks } from './matchers/investment';
+import { queryBaseInfo, TycBaseInfo } from './tyc-api';
+
+export interface VerifyReport {
+  status: '已核实' | '无法验证' | '已核实（仅主体）' | '已识别（待接入）';
+  usedEndpoint: string;
+  resolvedEndpoint?: EndpointKey | 'unknown';
+  items: number;
+  matchedItem?: any;
+  reason: string;
+  hint?: string;
+  baseinfo?: TycBaseInfo;
+  detailBlocks?: any[];
+}
+
+export async function verifyNews(
+  companyName: string,
+  dynamicType: string,
+  newsText: string,
+): Promise<VerifyReport> {
+  const baseinfoPromise = queryBaseInfo(companyName).catch(() => undefined);
+  const endpoint = resolveEndpoint(dynamicType);
+
+  if (!endpoint) {
+    console.warn(
+      `[VERIFY] 未识别动态类型: "${dynamicType}" → 回落 baseinfo. 请在 type-mapping.ts 补充`,
+    );
+    const bi = await baseinfoPromise;
+    return {
+      status: bi ? '已核实（仅主体）' : '无法验证',
+      usedEndpoint: 'open/ic/baseinfo/normal',
+      resolvedEndpoint: 'unknown',
+      items: bi ? 1 : 0,
+      reason: `未识别动态类型「${dynamicType}」`,
+      hint: '请在 type-mapping.ts 补充映射',
+      baseinfo: bi,
+    };
+  }
+
+  if (PENDING_ENDPOINTS.has(endpoint)) {
+    console.info(
+      `[VERIFY] 动态类型「${dynamicType}」已识别为 ${endpoint}，但专项接口未接入 → 回落 baseinfo`,
+    );
+    const bi = await baseinfoPromise;
+    return {
+      status: '已识别（待接入）',
+      usedEndpoint: 'open/ic/baseinfo/normal',
+      resolvedEndpoint: endpoint,
+      items: bi ? 1 : 0,
+      reason: `类型「${dynamicType}」归类 ${endpoint}，Phase 2 接入专项接口后升级`,
+      hint: `Phase 2 待接入: ${endpoint}`,
+      baseinfo: bi,
+    };
+  }
+
+  switch (endpoint) {
+    case 'bidding': {
+      const { items } = await queryBidding(companyName);
+      const m = matchBidding(newsText, items);
+      return {
+        status: m.matched ? '已核实' : '无法验证',
+        usedEndpoint: 'open/m/bids/2.0',
+        resolvedEndpoint: endpoint,
+        items: items.length,
+        matchedItem: m.matchedItem,
+        reason: m.reason,
+        hint: m.hint,
+        detailBlocks: formatBiddingBlocks(items),
+        baseinfo: await baseinfoPromise,
+      };
+    }
+    case 'patent': {
+      const { items } = await queryPatent(companyName);
+      const m = matchPatent(newsText, items);
+      return {
+        status: m.matched ? '已核实' : '无法验证',
+        usedEndpoint: 'open/ipr/patents/3.0',
+        resolvedEndpoint: endpoint,
+        items: items.length,
+        matchedItem: m.matchedItem,
+        reason: m.reason,
+        hint: m.hint,
+        detailBlocks: formatPatentBlocks(items),
+        baseinfo: await baseinfoPromise,
+      };
+    }
+    case 'investment': {
+      const { items } = await queryInvestment(companyName);
+      const m = matchInvestment(newsText, items);
+      return {
+        status: m.matched ? '已核实' : '无法验证',
+        usedEndpoint: 'open/ic/baseinfo/normal',
+        resolvedEndpoint: endpoint,
+        items: items.length,
+        matchedItem: m.matchedItem,
+        reason: m.reason,
+        hint: m.hint,
+        detailBlocks: formatInvestmentBlocks(items),
+        baseinfo: await baseinfoPromise,
+      };
+    }
+    case 'baseinfo': {
+      const bi = await baseinfoPromise;
+      return {
+        status: bi ? '已核实（仅主体）' : '无法验证',
+        usedEndpoint: 'open/ic/baseinfo/normal',
+        resolvedEndpoint: endpoint,
+        items: bi ? 1 : 0,
+        reason: bi
+          ? `主体变更类「${dynamicType}」，仅核实主体`
+          : '主体查询失败',
+        baseinfo: bi,
+      };
+    }
+    default: {
+      const bi = await baseinfoPromise;
+      return {
+        status: '无法验证',
+        usedEndpoint: 'open/ic/baseinfo/normal',
+        resolvedEndpoint: endpoint,
+        items: 0,
+        reason: '未处理的 endpoint',
+        baseinfo: bi,
+      };
+    }
+  }
+}

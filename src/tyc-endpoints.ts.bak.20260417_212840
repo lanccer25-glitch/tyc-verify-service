@@ -1,0 +1,73 @@
+import { tycRequest } from './tyc-api';
+
+export interface BiddingItem {
+  title: string;
+  abs: string;
+  content?: string;
+  proxyName?: string;
+  purchaser?: string;
+  publishTime: number;
+  bidType?: string;
+  bidIndustry?: string;
+  projectCode?: string;
+  bidAmount?: string;
+  [key: string]: unknown;
+}
+
+export interface ListResult<T> {
+  total: number;
+  items: T[];
+}
+
+export async function queryBidding(keyword: string, pageSize = 20) {
+  const data = await tycRequest<ListResult<BiddingItem>>('open/m/bids/2.0', {
+    keyword,
+    pageNum: 1,
+    pageSize,
+  });
+  if (data.error_code !== 0)
+    throw new Error(`[bids] ${data.error_code}: ${data.reason}`);
+  return data.result ?? { total: 0, items: [] };
+}
+
+export interface PatentItem {
+  patentName: string;
+  applicantName?: string;
+  appNumber?: string;
+  pubNumber?: string;
+  appDate?: number;
+  pubDate?: number;
+  patentType?: string;
+  [key: string]: unknown;
+}
+
+export async function queryPatent(keyword: string, pageSize = 20) {
+  const data = await tycRequest<ListResult<PatentItem>>(
+    'open/ipr/patents/3.0',
+    { keyword, pageNum: 1, pageSize },
+  );
+  if (data.error_code !== 0)
+    throw new Error(`[patents] ${data.error_code}: ${data.reason}`);
+  return data.result ?? { total: 0, items: [] };
+}
+
+export interface InvestmentItem {
+  name: string;
+  legalPersonName?: string;
+  regCapital?: string;
+  regStatus?: string;
+  estiblishTime?: number;
+  percent?: string;
+  amount?: string;
+  [key: string]: unknown;
+}
+
+export async function queryInvestment(keyword: string, pageSize = 20) {
+  const data = await tycRequest<ListResult<InvestmentItem>>(
+    'open/ic/companyinvest/2.0',
+    { keyword, pageNum: 1, pageSize },
+  );
+  if (data.error_code !== 0)
+    throw new Error(`[invest] ${data.error_code}: ${data.reason}`);
+  return data.result ?? { total: 0, items: [] };
+}
