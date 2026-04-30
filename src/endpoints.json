@@ -4,14 +4,14 @@
     "description": "企业工商信息（基础版）",
     "required": ["keyword"]
   },
-  "baseinfo_v3": {
-    "path": "open/ic/baseinfoV3/2.0",
-    "description": "企业工商信息 V3",
-    "required": ["keyword"]
-  },
   "baseinfo_v2": {
     "path": "open/ic/baseinfoV2/2.0",
     "description": "企业工商信息 V2",
+    "required": ["keyword"]
+  },
+  "baseinfo_v3": {
+    "path": "open/ic/baseinfoV3/2.0",
+    "description": "企业工商信息 V3",
     "required": ["keyword"]
   },
   "baseinfo_special": {
@@ -21,12 +21,42 @@
   },
   "verify": {
     "path": "open/ic/verify/2.0",
-    "description": "三要素核验",
-    "required": ["keyword", "legalPersonName"]
+    "description": "三要素核验（code+名称+法人名）",
+    "required": ["code", "name", "legalPersonName"]
+  },
+  "company_type_v2": {
+    "path": "open/ic/companyType/v2",
+    "description": "企业类型 V2",
+    "required": ["keyword"]
   },
   "company_type": {
-    "path": "open/ic/companyType/v2",
+    "path": "open/ic/companyType",
     "description": "企业类型",
+    "required": ["keyword"]
+  },
+  "snapshot": {
+    "path": "open/ic/snapshot",
+    "description": "工商快照",
+    "required": ["keyword"]
+  },
+  "contact": {
+    "path": "open/ic/contact",
+    "description": "企业联系方式",
+    "required": ["keyword"]
+  },
+  "staff": {
+    "path": "open/ic/staff/2.0",
+    "description": "企业人员",
+    "required": ["keyword"]
+  },
+  "holder": {
+    "path": "open/ic/holder/2.0",
+    "description": "股东信息",
+    "required": ["keyword"]
+  },
+  "hi_members": {
+    "path": "open/hi/members",
+    "description": "集团成员",
     "required": ["keyword"]
   },
   "bidding": {
