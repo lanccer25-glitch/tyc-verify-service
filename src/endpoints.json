@@ -110,10 +110,19 @@
     "required": ["keyword"]
   },
   "investment": {
-    "path": "v4/open/investEvent",
-    "description": "对外投资",
+    "path": "open/oi/investEvent/2.0",
+    "description": "对外投资事件",
     "required": ["keyword"]
   },
+  "findTzanli": {"path": "open/cd/findTzanli/2.0", "required": ["keyword"]},
+  "searchBrandAndAgency": {"path": "open/cd/searchBrandAndAgency/2.0", "required": ["word"]},
+  "investOrg": {"path": "open/cd/investOrg/2.0", "required": ["keyword"]},
+  "publicInvest": {"path": "open/oi/publicInvest/2.0", "required": ["name"]},
+  "secretInvest": {"path": "open/oi/secretInvest/2.0", "required": ["name"]},
+  "extFunds": {"path": "open/oi/extFunds/2.0", "required": ["name"]},
+  "investEvent": {"path": "open/oi/investEvent/2.0", "required": ["name"]},
+  "groupInvestors": {"path": "open/group/investors", "required": ["uuid"]},
+  "groupInvestorMember": {"path": "open/group/investorMember", "required": ["uuid", "id"]},
   "judicial_announcement": {
     "path": "open/jr/ktannouncement/2.0",
     "description": "开庭公告（现行，兼容旧key）",
