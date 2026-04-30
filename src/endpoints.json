@@ -114,6 +114,31 @@
     "description": "对外投资",
     "required": ["keyword"]
   },
+  "judicial_announcement": {
+    "path": "open/jr/ktannouncement/2.0",
+    "description": "开庭公告（现行，兼容旧key）",
+    "required": ["keyword"]
+  },
+  "judicial_court_notice": {
+    "path": "open/jr/courtAnnouncement/2.0",
+    "description": "法院公告（现行，兼容旧key）",
+    "required": ["keyword"]
+  },
+  "judicial_zhixing": {
+    "path": "open/jr/zhixinginfo/2.0",
+    "description": "被执行人（现行，兼容旧key）",
+    "required": ["keyword"]
+  },
+  "judicial_restriction": {
+    "path": "open/jr/consumptionRestriction/2.0",
+    "description": "限制消费令（兼容旧key）",
+    "required": ["keyword"]
+  },
+  "judicial_dishonest": {
+    "path": "open/jr/dishonest/2.0",
+    "description": "失信被执行人（现行，兼容旧key）",
+    "required": ["keyword"]
+  },
   "import_export": {
     "path": "open/ic/importAndExport/2.0",
     "description": "进出口信用",
