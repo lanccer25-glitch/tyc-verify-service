@@ -1,15 +1,92 @@
 {
-  "baseinfo": "open/ic/baseinfo/normal",
-  "bidding": "open/m/bids/2.0",
-  "patent": "open/ipr/patents/3.0",
-  "investment": "open/ic/companyinvest/2.0",
-  "judicial_announcement": "open/hi/announcement/2.0",
-  "judicial_court_notice": "open/jr/courtNotice/2.0",
-  "judicial_zhixing": "open/jr/zhixing/2.0",
-  "judicial_restriction": "open/jr/consumptionRestriction/2.0",
-  "judicial_dishonest": "open/jr/dishonest/2.0",
-  "import_export": "open/ic/importAndExport/2.0",
-  "customer_client": "open/m/customer/2.0",
-  "customer_supplier": "open/m/purchaserList/2.0",
-  "license": "open/ic/license/2.0"
+  "baseinfo": {
+    "path": "open/ic/baseinfo/normal",
+    "description": "企业工商信息（基础版）",
+    "required": ["keyword"]
+  },
+  "baseinfo_v3": {
+    "path": "open/ic/baseinfoV3/2.0",
+    "description": "企业工商信息 V3",
+    "required": ["keyword"]
+  },
+  "baseinfo_v2": {
+    "path": "open/ic/baseinfoV2/2.0",
+    "description": "企业工商信息 V2",
+    "required": ["keyword"]
+  },
+  "baseinfo_special": {
+    "path": "open/ic/baseinfo/special",
+    "description": "企业工商信息（特殊版）",
+    "required": ["keyword"]
+  },
+  "verify": {
+    "path": "open/ic/verify/2.0",
+    "description": "三要素核验",
+    "required": ["keyword", "legalPersonName"]
+  },
+  "company_type": {
+    "path": "open/ic/companyType/v2",
+    "description": "企业类型",
+    "required": ["keyword"]
+  },
+  "bidding": {
+    "path": "open/m/bids/2.0",
+    "description": "招投标信息",
+    "required": ["keyword"]
+  },
+  "patent": {
+    "path": "open/ipr/patents/3.0",
+    "description": "专利信息",
+    "required": ["keyword"]
+  },
+  "investment": {
+    "path": "open/ic/companyinvest/2.0",
+    "description": "对外投资",
+    "required": ["keyword"]
+  },
+  "judicial_announcement": {
+    "path": "open/hi/announcement/2.0",
+    "description": "开庭公告",
+    "required": ["keyword"]
+  },
+  "judicial_court_notice": {
+    "path": "open/jr/courtNotice/2.0",
+    "description": "法院公告",
+    "required": ["keyword"]
+  },
+  "judicial_zhixing": {
+    "path": "open/jr/zhixing/2.0",
+    "description": "被执行人",
+    "required": ["keyword"]
+  },
+  "judicial_restriction": {
+    "path": "open/jr/consumptionRestriction/2.0",
+    "description": "限制高消费",
+    "required": ["keyword"]
+  },
+  "judicial_dishonest": {
+    "path": "open/jr/dishonest/2.0",
+    "description": "失信被执行人",
+    "required": ["keyword"]
+  },
+  "import_export": {
+    "path": "open/ic/importAndExport/2.0",
+    "description": "进出口信用",
+    "required": ["keyword"]
+  },
+  "customer_client": {
+    "path": "open/m/customer/2.0",
+    "description": "企业客户",
+    "required": ["keyword"]
+  },
+  "customer_supplier": {
+    "path": "open/m/purchaserList/2.0",
+    "description": "企业供应商",
+    "required": ["keyword"]
+  },
+  "license": {
+    "path": "open/ic/license/2.0",
+    "description": "行政许可",
+    "required": ["keyword"]
+  }
 }

@@ -1,4 +1,9 @@
-import { callEndpoint, callEndpointByPath, getAllEndpoints } from './tyc-endpoints';
+import {
+  callEndpoint,
+  callEndpointByPath,
+  getAllEndpoints,
+  EndpointError,
+} from './tyc-endpoints';
 import { TycResponse, getRateLimitUsage } from './tyc-api';
 
 export type { TycResponse };
@@ -7,6 +12,7 @@ export interface ProxyResult<T = any> {
   success: boolean;
   data?: T;
   error?: string;
+  missingParams?: string[];
 }
 
 export async function proxyCall<T = any>(
@@ -18,6 +24,9 @@ export async function proxyCall<T = any>(
     return { success: true, data };
   } catch (err: any) {
     console.error(`[PROXY] ${key} failed:`, err.message);
+    if (err instanceof EndpointError) {
+      return { success: false, error: err.message, missingParams: err.missingParams };
+    }
     return { success: false, error: err.message };
   }
 }
@@ -39,7 +48,12 @@ export function getProxyStatus() {
   const endpoints = getAllEndpoints();
   return {
     registeredEndpoints: endpoints.length,
-    endpoints: endpoints.map((e) => e.key),
+    endpoints: endpoints.map((e) => ({
+      key: e.key,
+      path: e.path,
+      description: e.description,
+      required: e.required,
+    })),
     rateLimit: getRateLimitUsage(),
   };
 }

@@ -37,7 +37,8 @@ app.post('/api/proxy/:key', async (req, res) => {
   const params = req.body || {};
   const result = await proxyCall(key, params);
   if (!result.success) {
-    return res.status(404).json(result);
+    const status = result.missingParams ? 400 : 404;
+    return res.status(status).json(result);
   }
   res.json(result);
 });

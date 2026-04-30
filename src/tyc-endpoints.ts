@@ -1,33 +1,78 @@
 import { tycRequest, TycResponse } from './tyc-api';
 import endpointsConfig from './endpoints.json';
 
-const endpoints: Record<string, string> = endpointsConfig;
+export interface EndpointDef {
+  path: string;
+  description?: string;
+  required?: string[];
+}
+
+type EndpointValue = string | EndpointDef;
+type EndpointsConfig = Record<string, EndpointValue>;
+
+const config = endpointsConfig as EndpointsConfig;
+
+function resolveDef(value: EndpointValue): EndpointDef {
+  if (typeof value === 'string') {
+    return { path: value };
+  }
+  return value;
+}
+
+export function getEndpointDef(key: string): EndpointDef | undefined {
+  const raw = config[key];
+  if (!raw) return undefined;
+  return resolveDef(raw);
+}
 
 export function getEndpointPath(key: string): string | undefined {
-  return endpoints[key];
+  return getEndpointDef(key)?.path;
 }
 
 export function getAllEndpointKeys(): string[] {
-  return Object.keys(endpoints);
+  return Object.keys(config);
 }
 
-export function getAllEndpoints(): Array<{ key: string; path: string }> {
-  return Object.entries(endpoints).map(([key, path]) => ({ key, path }));
+export function getAllEndpoints(): Array<{ key: string; path: string; description?: string; required?: string[] }> {
+  return Object.entries(config).map(([key, raw]) => {
+    const def = resolveDef(raw);
+    return { key, path: def.path, description: def.description, required: def.required };
+  });
 }
 
-export function hasEndpoint(key: string): boolean {
-  return key in endpoints;
+export class EndpointError extends Error {
+  constructor(
+    message: string,
+    public missingParams?: string[],
+  ) {
+    super(message);
+    this.name = 'EndpointError';
+  }
 }
 
 export async function callEndpoint<T = any>(
   key: string,
   params: Record<string, string | number | undefined> = {},
 ): Promise<TycResponse<T>> {
-  const path = endpoints[key];
-  if (!path) {
-    throw new Error(`[ENDPOINT] 未注册的端点: ${key}，请在 endpoints.json 中添加`);
+  const def = getEndpointDef(key);
+  if (!def) {
+    throw new EndpointError(`未注册的端点: ${key}，请在 endpoints.json 中添加`);
   }
-  return tycRequest<T>(path, params);
+
+  if (def.required) {
+    const missing = def.required.filter((p) => {
+      const v = params[p];
+      return v === undefined || v === '' || v === null;
+    });
+    if (missing.length) {
+      throw new EndpointError(
+        `端点 ${key} 缺少必要参数: ${missing.join(', ')}`,
+        missing,
+      );
+    }
+  }
+
+  return tycRequest<T>(def.path, params);
 }
 
 export async function callEndpointByPath<T = any>(
