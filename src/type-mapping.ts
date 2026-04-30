@@ -17,6 +17,7 @@ export type EndpointKey =
   | 'customer_client'
   | 'customer_supplier'
   | 'license'
+  | 'taxCredit'
   | 'baseinfo';
 
 /** Layer 1：精确查表（基于 2026-04-17 生产数据 23 枚举） */
@@ -51,6 +52,9 @@ export const TYPE_TO_ENDPOINT: Record<string, EndpointKey> = {
 
   // 行政许可
   '新增行政许可': 'license',
+
+  // 税务评级
+  '新增税务评级': 'taxCredit',
 
   // 主体变更类（baseinfo 兜底）
   '企业地址变更':   'baseinfo',

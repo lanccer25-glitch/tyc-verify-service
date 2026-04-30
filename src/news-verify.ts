@@ -128,7 +128,7 @@ export async function verifyNews(
       return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatPatentBlocks(items) };
     }
     case 'investment': {
-      const items = await fetchItemsWithParam('investment', 'name', companyName);
+      const items = await fetchItems('investment', companyName);
       const m = matchInvestment(newsText, items);
       return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatInvestmentBlocks(items) };
     }
@@ -178,6 +178,12 @@ export async function verifyNews(
       const items = await fetchItems('license', companyName);
       const m = matchLicense(newsText, items);
       return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatLicenseBlocks(items) };
+    }
+
+    case 'taxCredit': {
+      const items = await fetchItems('taxCredit', companyName);
+      const m = { matched: items.length > 0, reason: `税务评级 ${items.length} 条记录`, matchedItem: items[0] };
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatUniversalBlocks(items) };
     }
 
     case 'baseinfo': {

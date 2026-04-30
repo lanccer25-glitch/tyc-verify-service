@@ -110,8 +110,8 @@
     "required": ["keyword"]
   },
   "investment": {
-    "path": "open/oi/investEvent/2.0",
-    "description": "对外投资事件",
+    "path": "open/ic/inverst/2.0",
+    "description": "对外投资",
     "required": ["keyword"]
   },
   "findTzanli": {"path": "open/cd/findTzanli/2.0", "required": ["keyword"]},
@@ -247,6 +247,7 @@
   "bq_regHuman_detail": {"path": "open/bq/regHuman/detail/2.0", "required": ["keyword"]},
   "bq_qualification_detail": {"path": "open/bq/qualification/detail/2.0", "required": ["keyword"]},
   "bq_qualification": {"path": "open/bq/qualification/2.0", "required": ["keyword"]},
+  "taxCredit": {"path": "open/m/taxCredit/2.0", "required": ["keyword"]},
   "search": {"path": "open/search/2.0", "required": ["word"]},
   "human_restrictedOutbound": {"path": "v4/open/human/restrictedOutbound", "required": ["keyword"]},
   "human_endCase": {"path": "v4/open/human/endCase", "required": ["keyword"]},
