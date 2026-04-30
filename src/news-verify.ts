@@ -2,9 +2,9 @@ import {
   resolveEndpoint, PENDING_ENDPOINTS, EndpointKey,
 } from './type-mapping';
 import { callEndpoint, getEndpointPath } from './tyc-endpoints';
-import { matchBidding } from './matchers/bidding';
-import { matchPatent } from './matchers/patent';
-import { matchInvestment } from './matchers/investment';
+import { matchBidding, formatBiddingBlocks } from './matchers/bidding';
+import { matchPatent, formatPatentBlocks } from './matchers/patent';
+import { matchInvestment, formatInvestmentBlocks } from './matchers/investment';
 import { matchJudicial, formatJudicialBlocks } from './matchers/judicial';
 import { matchImportExport } from './matchers/import-export';
 import { matchCustomer } from './matchers/customer';
@@ -62,6 +62,22 @@ async function fetchItems(endpointKey: string, keyword: string) {
   }
 }
 
+async function fetchItemsWithParam(endpointKey: string, paramName: string, value: string) {
+  try {
+    const data = await callEndpoint(endpointKey, { [paramName]: value, pageNum: 1, pageSize: 20 });
+    if (data.error_code !== 0) {
+      console.warn(`[VERIFY] ${endpointKey} error_code=${data.error_code}: ${data.reason}`);
+      return [] as any[];
+    }
+    const result = data.result as any;
+    if (!result) return [];
+    return result.items ?? [];
+  } catch (err: any) {
+    console.warn(`[VERIFY] ${endpointKey} failed:`, err.message);
+    return [];
+  }
+}
+
 export async function verifyNews(
   companyName: string,
   dynamicType: string,
@@ -102,18 +118,18 @@ export async function verifyNews(
   switch (endpoint) {
     case 'bidding': {
       const items = await fetchItems('bidding', companyName);
-      return wrap(path, endpoint, items,
-        matchBidding(newsText, items), await baseinfoPromise);
+      const m = matchBidding(newsText, items);
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatBiddingBlocks(items) };
     }
     case 'patent': {
       const items = await fetchItems('patent', companyName);
-      return wrap(path, endpoint, items,
-        matchPatent(newsText, items), await baseinfoPromise);
+      const m = matchPatent(newsText, items);
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatPatentBlocks(items) };
     }
     case 'investment': {
-      const items = await fetchItems('investment', companyName);
-      return wrap(path, endpoint, items,
-        matchInvestment(newsText, items), await baseinfoPromise);
+      const items = await fetchItemsWithParam('investment', 'name', companyName);
+      const m = matchInvestment(newsText, items);
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatInvestmentBlocks(items) };
     }
 
     case 'judicial_announcement': {
