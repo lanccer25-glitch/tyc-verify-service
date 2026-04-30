@@ -123,6 +123,13 @@
   "investEvent": {"path": "open/oi/investEvent/2.0", "required": ["name"]},
   "groupInvestors": {"path": "open/group/investors", "required": ["uuid"]},
   "groupInvestorMember": {"path": "open/group/investorMember", "required": ["uuid", "id"]},
+  "hi_invest": {"path": "open/hi/invest/2.0", "required": ["keyword"]},
+  "ic_invest": {"path": "open/ic/inverst/2.0", "required": ["keyword"]},
+  "bids_search": {"path": "open/m/bids/search", "required": ["keyword"]},
+  "certificate": {"path": "open/m/certificate/2.0", "required": ["name"]},
+  "standardInfo": {"path": "open/m/standardInfo", "required": ["keyword"]},
+  "taxpayer": {"path": "open/m/taxpayer/2.0", "required": ["keyword"]},
+  "hi_license": {"path": "open/hi/getHisAdministrativeLicense/2.0", "required": ["keyword"]},
   "judicial_announcement": {
     "path": "open/jr/ktannouncement/2.0",
     "description": "开庭公告（现行，兼容旧key）",
