@@ -140,7 +140,7 @@
     "required": ["keyword"]
   },
   "import_export": {
-    "path": "open/ic/importAndExport/2.0",
+    "path": "open/m/importAndExport/2.0",
     "description": "进出口信用",
     "required": ["keyword"]
   },
@@ -150,7 +150,7 @@
     "required": ["keyword"]
   },
   "customer_supplier": {
-    "path": "open/m/purchaserList/2.0",
+    "path": "open/m/supply/2.0",
     "description": "企业供应商",
     "required": ["keyword"]
   },
