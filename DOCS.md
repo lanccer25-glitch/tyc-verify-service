@@ -11,7 +11,7 @@
 
 天眼查 OpenAPI 代理服务，对接 Notion 实现企业动态自动核实。
 
-核心功能: 从 Notion 获取企业名称+动态类型 -> 调天眼查 API -> 写回核实结果+详情。
+核心链路: Notion 按钮触发 -> 获取企业名称+动态类型 -> 调天眼查 API 核实 -> 写回核实结果+详情块
 
 ---
 
@@ -19,7 +19,7 @@
 
 ```
 src/
-  endpoints.json      <- 接口路径配置（唯一需维护的文件）
+  endpoints.json      <- 接口路径配置（唯一需维护的文件，201 个端点）
   tyc-api.ts          <- HTTP 客户端，200次/小时限流
   tyc-endpoints.ts    <- 读 endpoints.json，按 key 调接口
   tyc-proxy.ts        <- 统一代理层
@@ -33,11 +33,11 @@ src/
     bidding.ts        <- 招投标匹配+格式化
     patent.ts         <- 专利匹配+格式化
     investment.ts     <- 投资匹配+格式化
-    judicial.ts       <- 司法匹配+格式化（5个子类）
+    judicial.ts       <- 司法匹配+格式化（5个子类，多字段映射）
     import-export.ts  <- 进出口匹配+格式化
     customer.ts       <- 客户/供应商匹配+格式化
     license.ts        <- 行政许可匹配+格式化
-    universal.ts      <- 通用格式化（自动检测数据结构）
+    universal.ts      <- 通用格式化（自动检测数据结构生成表格）
 ```
 
 ---
@@ -47,7 +47,7 @@ src/
 | 路由 | 方法 | 说明 |
 |------|------|------|
 | /api/health | GET | 健康检查 |
-| /api/proxy/status | GET | 所有已注册端点+限流状态 |
+| /api/proxy/status | GET | 201个端点+限流状态 |
 | /api/proxy/:key | POST | 调已注册端点，自动校验参数 |
 | /api/raw | POST | 调任意路径 {"path":"xxx","params":{}} |
 | /api/verify-company | POST | Notion 核实触发 |
@@ -56,7 +56,7 @@ src/
 
 ## 4. 如何添加新接口
 
-编辑 /root/tyc-verify-service/src/endpoints.json：
+编辑 /root/tyc-verify-service/src/endpoints.json，添加一个 key：
 
 ```json
 {
@@ -68,16 +68,32 @@ src/
 }
 ```
 
-然后重启：
-```bash
-cd /root/tyc-verify-service && npm run build && pm2 restart tyc-verify
-```
+重启: `cd /root/tyc-verify-service && npm run build && pm2 restart tyc-verify`
 
-无需改任何其他代码。
+### 4.1 如需新类型接入 Verify 流程（三步）
+
+1. **endpoints.json** 加路径
+2. **type-mapping.ts** 加 EndpointKey + TYPE_TO_ENDPOINT 映射
+3. **news-verify.ts** 加 case（可用 `formatUniversalBlocks` 通用格式化）
+
+示例（税务评级）:
+```typescript
+// type-mapping.ts
+| 'taxCredit'  // 加到 EndpointKey 类型
+
+'新增税务评级': 'taxCredit',  // 加到 TYPE_TO_ENDPOINT
+
+// news-verify.ts
+case 'taxCredit': {
+  const items = await fetchItems('taxCredit', companyName);
+  const m = { matched: items.length > 0, reason: '税务评级 ' + items.length + ' 条记录' };
+  return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatUniversalBlocks(items) };
+}
+```
 
 ---
 
-## 5. Verify 流程支持的 13 种类型
+## 5. Verify 流程支持的 14 种类型
 
 | 中文动态类型 | API key | 有详情块 |
 |-------------|---------|---------|
@@ -85,7 +101,7 @@ cd /root/tyc-verify-service && npm run build && pm2 restart tyc-verify
 | 公开发明公布 | patent | YES |
 | 新增对外投资/退出/持股变化 | investment | YES |
 | 新增开庭公告 | judicial_announcement | YES |
-| 新增法院公告/裁判文书 | judicial_court_notice | YES |
+| 新增法院公告/裁判文书/起诉状副本 | judicial_court_notice | YES |
 | 被列入被执行人 | judicial_zhixing | YES |
 | 被限制高消费 | judicial_restriction | YES |
 | 被列入失信被执行人 | judicial_dishonest | YES |
@@ -93,33 +109,51 @@ cd /root/tyc-verify-service && npm run build && pm2 restart tyc-verify
 | 新增客户 | customer_client | YES |
 | 新增供应商 | customer_supplier | YES |
 | 新增行政许可 | license | YES |
+| 新增税务评级 | taxCredit | YES (通用格式化) |
 | 主体变更类 | baseinfo | 仅主体 |
 
 ---
 
-## 6. 常见问题
+## 6. 已知关键修正
+
+### 6.1 对外投资 (investment)
+- 路径: `open/ic/inverst/2.0` (天眼查实际路径，非拼写错误)
+- 参数: `keyword` (不是 name)
+- 2026-04-19 旧代码命中 14 条记录，已验证有效
+
+### 6.2 司法字段映射
+judicial.ts 的 `pick` 函数覆盖 5 种司法子类的所有字段变体:
+- 标题: litigant, party1, pname, bltntypename, caseReason
+- 案号: caseCode, caseno, caseNo, bltnno
+- 法院: court, execCourtName, courtcode, courtName
+- 日期: publishDate, publishdate, caseCreateTime, startDate
+- 金额: execMoney, content
+
+### 6.3 时间处理
+tsToDate 已修复支持 number | string 类型，防止 Invalid time value
+
+---
+
+## 7. 常见问题
 
 ### error_code=300000
-路径通，但该关键词无数据。
+路径通但该关键词无数据，试其他企业名。
 
 ### error_code=300005
 接口不在订阅范围或路径有误。
 
-### Invalid time value
-日期字段包含字符串，已修复 tsToDate 支持 string 类型。
-
 ### 关键字被截断
-Notion 侧数据问题，公司名过长被截断。
+Notion 侧公司名过长被截断（如"股份有限公司"变成"股份有限公司"），导致查不到。
 
 ### GitHub push/pull 超时
-国内网络问题，手动更新文件。
+国内网络问题，可通过 git stash + pull 或手动更新文件。
 
 ### 限流
-200次/小时，通过 /api/proxy/status 查看。
+200次/小时，/api/proxy/status 查看 rateLimit.used。
 
 ---
 
-## 7. 常用命令
+## 8. 常用命令
 
 ```bash
 # 编译重启
@@ -137,7 +171,7 @@ curl -X POST http://localhost:3100/api/proxy/{key} -H "Content-Type: application
 
 ---
 
-## 8. 环境变量
+## 9. 环境变量
 
 ```
 TYC_OPEN_API_BASE=https://open.api.tianyancha.com
