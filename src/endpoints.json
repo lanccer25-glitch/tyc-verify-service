@@ -1,0 +1,15 @@
+{
+  "baseinfo": "open/ic/baseinfo/normal",
+  "bidding": "open/m/bids/2.0",
+  "patent": "open/ipr/patents/3.0",
+  "investment": "open/ic/companyinvest/2.0",
+  "judicial_announcement": "open/hi/announcement/2.0",
+  "judicial_court_notice": "open/jr/courtNotice/2.0",
+  "judicial_zhixing": "open/jr/zhixing/2.0",
+  "judicial_restriction": "open/jr/consumptionRestriction/2.0",
+  "judicial_dishonest": "open/jr/dishonest/2.0",
+  "import_export": "open/ic/importAndExport/2.0",
+  "customer_client": "open/m/customer/2.0",
+  "customer_supplier": "open/m/purchaserList/2.0",
+  "license": "open/ic/license/2.0"
+}

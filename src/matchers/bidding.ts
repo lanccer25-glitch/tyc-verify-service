@@ -1,4 +1,4 @@
-import { BiddingItem } from '../tyc-endpoints';
+import { BiddingItem } from '../tyc-types';
 
 export interface MatchResult {
   matched: boolean;

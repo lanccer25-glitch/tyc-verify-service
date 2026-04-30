@@ -1,4 +1,4 @@
-import { PatentItem } from '../tyc-endpoints';
+import { PatentItem } from '../tyc-types';
 
 function tsToDate(ts?: number): string {
   return ts ? new Date(ts).toISOString().slice(0, 10) : '-';

@@ -1,12 +1,7 @@
 import {
   resolveEndpoint, PENDING_ENDPOINTS, EndpointKey,
 } from './type-mapping';
-import {
-  queryBidding, queryPatent, queryInvestment,
-  queryCourtAnnouncement, queryCourtNotice, queryZhixing,
-  queryRestriction, queryDishonest,
-  queryImportExport, queryCustomer, queryPurchaser, queryLicense,
-} from './tyc-endpoints';
+import { callEndpoint, getEndpointPath } from './tyc-endpoints';
 import { matchBidding } from './matchers/bidding';
 import { matchPatent } from './matchers/patent';
 import { matchInvestment } from './matchers/investment';
@@ -25,6 +20,10 @@ export interface VerifyReport {
   reason: string;
   hint?: string;
   baseinfo?: TycBaseInfo;
+}
+
+function endpointPath(key: EndpointKey | string): string {
+  return getEndpointPath(key) ?? key;
 }
 
 function wrap(
@@ -46,6 +45,22 @@ function wrap(
   };
 }
 
+async function fetchItems(endpointKey: string, keyword: string) {
+  try {
+    const data = await callEndpoint(endpointKey, { keyword, pageNum: 1, pageSize: 20 });
+    if (data.error_code !== 0) {
+      console.warn(`[VERIFY] ${endpointKey} error_code=${data.error_code}: ${data.reason}`);
+      return [] as any[];
+    }
+    const result = data.result as any;
+    if (!result) return [];
+    return result.items ?? [];
+  } catch (err: any) {
+    console.warn(`[VERIFY] ${endpointKey} failed:`, err.message);
+    return [];
+  }
+}
+
 export async function verifyNews(
   companyName: string,
   dynamicType: string,
@@ -54,7 +69,6 @@ export async function verifyNews(
   const baseinfoPromise = queryBaseInfo(companyName).catch(() => undefined);
   const endpoint = resolveEndpoint(dynamicType);
 
-  // 未识别
   if (!endpoint) {
     console.warn(`[VERIFY] 未识别动态类型: "${dynamicType}" → 回落 baseinfo`);
     const bi = await baseinfoPromise;
@@ -69,7 +83,6 @@ export async function verifyNews(
     };
   }
 
-  // 已识别但接口未接入（Phase 2 后应为空）
   if (PENDING_ENDPOINTS.has(endpoint)) {
     const bi = await baseinfoPromise;
     return {
@@ -83,74 +96,72 @@ export async function verifyNews(
     };
   }
 
+  const path = endpointPath(endpoint);
+
   switch (endpoint) {
-    // ---------- Phase 1 ----------
     case 'bidding': {
-      const { items } = await queryBidding(companyName);
-      return wrap('open/m/bids/2.0', endpoint, items,
+      const items = await fetchItems('bidding', companyName);
+      return wrap(path, endpoint, items,
         matchBidding(newsText, items), await baseinfoPromise);
     }
     case 'patent': {
-      const { items } = await queryPatent(companyName);
-      return wrap('open/ipr/patents/3.0', endpoint, items,
+      const items = await fetchItems('patent', companyName);
+      return wrap(path, endpoint, items,
         matchPatent(newsText, items), await baseinfoPromise);
     }
     case 'investment': {
-      const { items } = await queryInvestment(companyName);
-      return wrap('open/ic/companyinvest/2.0', endpoint, items,
+      const items = await fetchItems('investment', companyName);
+      return wrap(path, endpoint, items,
         matchInvestment(newsText, items), await baseinfoPromise);
     }
 
-    // ---------- Phase 2：司法 5 子类 ----------
     case 'judicial_announcement': {
-      const { items } = await queryCourtAnnouncement(companyName);
-      return wrap('open/hi/announcement/2.0', endpoint, items,
+      const items = await fetchItems('judicial_announcement', companyName);
+      return wrap(path, endpoint, items,
         matchJudicial(newsText, items, 'announcement'), await baseinfoPromise);
     }
     case 'judicial_court_notice': {
-      const { items } = await queryCourtNotice(companyName);
-      return wrap('open/jr/courtNotice/2.0', endpoint, items,
+      const items = await fetchItems('judicial_court_notice', companyName);
+      return wrap(path, endpoint, items,
         matchJudicial(newsText, items, 'court_notice'), await baseinfoPromise);
     }
     case 'judicial_zhixing': {
-      const { items } = await queryZhixing(companyName);
-      return wrap('open/jr/zhixing/2.0', endpoint, items,
+      const items = await fetchItems('judicial_zhixing', companyName);
+      return wrap(path, endpoint, items,
         matchJudicial(newsText, items, 'zhixing'), await baseinfoPromise);
     }
     case 'judicial_restriction': {
-      const { items } = await queryRestriction(companyName);
-      return wrap('open/jr/consumptionRestriction/2.0', endpoint, items,
+      const items = await fetchItems('judicial_restriction', companyName);
+      return wrap(path, endpoint, items,
         matchJudicial(newsText, items, 'restriction'), await baseinfoPromise);
     }
     case 'judicial_dishonest': {
-      const { items } = await queryDishonest(companyName);
-      return wrap('open/jr/dishonest/2.0', endpoint, items,
+      const items = await fetchItems('judicial_dishonest', companyName);
+      return wrap(path, endpoint, items,
         matchJudicial(newsText, items, 'dishonest'), await baseinfoPromise);
     }
 
-    // ---------- Phase 2：其他 ----------
     case 'import_export': {
-      const { items } = await queryImportExport(companyName);
-      return wrap('open/ic/importAndExport/2.0', endpoint, items,
+      const items = await fetchItems('import_export', companyName);
+      return wrap(path, endpoint, items,
         matchImportExport(newsText, items), await baseinfoPromise);
     }
     case 'customer_client': {
-      const { items } = await queryCustomer(companyName);
-      return wrap('open/m/customer/2.0', endpoint, items,
+      const items = await fetchItems('customer_client', companyName);
+      return wrap(path, endpoint, items,
         matchCustomer(newsText, items, 'client'), await baseinfoPromise);
     }
     case 'customer_supplier': {
-      const { items } = await queryPurchaser(companyName);
-      return wrap('open/m/purchaserList/2.0', endpoint, items,
+      const items = await fetchItems('customer_supplier', companyName);
+      return wrap(path, endpoint, items,
         matchCustomer(newsText, items, 'supplier'), await baseinfoPromise);
     }
     case 'license': {
-      const { items } = await queryLicense(companyName);
-      return wrap('open/ic/license/2.0', endpoint, items,
+      const items = await fetchItems('license', companyName);
+      return wrap(path, endpoint, items,
         matchLicense(newsText, items), await baseinfoPromise);
     }
 
-    // ---------- 兜底 ----------
     case 'baseinfo': {
       const bi = await baseinfoPromise;
       return {

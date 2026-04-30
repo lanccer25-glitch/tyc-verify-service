@@ -1,4 +1,4 @@
-import { InvestmentItem } from '../tyc-endpoints';
+import { InvestmentItem } from '../tyc-types';
 
 function tsToDate(ts?: number): string {
   return ts ? new Date(ts).toISOString().slice(0, 10) : '-';
