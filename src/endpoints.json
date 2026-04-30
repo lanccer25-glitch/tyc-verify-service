@@ -59,6 +59,46 @@
     "description": "集团成员",
     "required": ["keyword"]
   },
+  "law_suit": {
+    "path": "open/jr/lawSuit/3.0",
+    "description": "法律诉讼（现行）",
+    "required": ["keyword"]
+  },
+  "law_suit_history": {
+    "path": "open/hi/lawSuit/3.0",
+    "description": "历史法律诉讼",
+    "required": ["keyword"]
+  },
+  "law_suit_detail": {
+    "path": "open/jr/lawSuit/detail",
+    "description": "法律诉讼详情",
+    "required": ["uuid"]
+  },
+  "ktannouncement": {
+    "path": "open/jr/ktannouncement/2.0",
+    "description": "开庭公告（现行）",
+    "required": ["keyword"]
+  },
+  "announcement_history": {
+    "path": "open/hi/announcement/2.0",
+    "description": "历史开庭公告",
+    "required": ["keyword"]
+  },
+  "court_announcement": {
+    "path": "open/jr/courtAnnouncement/2.0",
+    "description": "法院公告（现行）",
+    "required": ["keyword"]
+  },
+  "court_history": {
+    "path": "open/hi/court/2.0",
+    "description": "历史法院公告",
+    "required": ["keyword"]
+  },
+  "send_announcement": {
+    "path": "open/jr/sendAnnouncement/2.0",
+    "description": "送达公告",
+    "required": ["keyword"]
+  },
   "bidding": {
     "path": "open/m/bids/2.0",
     "description": "招投标信息",
@@ -72,31 +112,6 @@
   "investment": {
     "path": "open/ic/companyinvest/2.0",
     "description": "对外投资",
-    "required": ["keyword"]
-  },
-  "judicial_announcement": {
-    "path": "open/hi/announcement/2.0",
-    "description": "开庭公告",
-    "required": ["keyword"]
-  },
-  "judicial_court_notice": {
-    "path": "open/jr/courtNotice/2.0",
-    "description": "法院公告",
-    "required": ["keyword"]
-  },
-  "judicial_zhixing": {
-    "path": "open/jr/zhixing/2.0",
-    "description": "被执行人",
-    "required": ["keyword"]
-  },
-  "judicial_restriction": {
-    "path": "open/jr/consumptionRestriction/2.0",
-    "description": "限制高消费",
-    "required": ["keyword"]
-  },
-  "judicial_dishonest": {
-    "path": "open/jr/dishonest/2.0",
-    "description": "失信被执行人",
     "required": ["keyword"]
   },
   "import_export": {
@@ -118,5 +133,40 @@
     "path": "open/ic/license/2.0",
     "description": "行政许可",
     "required": ["keyword"]
+  },
+  "court_register": {
+    "path": "open/jr/courtRegister/2.0",
+    "description": "立案信息",
+    "required": ["keyword"]
+  },
+  "judicial_assist": {
+    "path": "v4/open/judicial",
+    "description": "司法协助",
+    "required": ["keyword"]
+  },
+  "judicial_assist_detail": {
+    "path": "v4/open/getJudicialDetail",
+    "description": "司法协助详情",
+    "required": ["assistanceId"]
+  },
+  "hi_judicial": {
+    "path": "open/hi/judicial/2.0",
+    "description": "历史司法协助",
+    "required": ["keyword"]
+  },
+  "hi_judicial_detail": {
+    "path": "open/hi/judicial/detail/2.0",
+    "description": "历史司法协助详情",
+    "required": ["businessId"]
+  },
+  "bankruptcy": {
+    "path": "open/jr/bankruptcy/2.0",
+    "description": "破产重整",
+    "required": ["keyword"]
+  },
+  "bankruptcy_detail": {
+    "path": "open/jr/bankruptcy/detail/2.0",
+    "description": "破产重整详情",
+    "required": ["gid", "uuid"]
   }
 }
