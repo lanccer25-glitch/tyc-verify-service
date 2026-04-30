@@ -155,8 +155,13 @@
     "required": ["keyword"]
   },
   "license": {
-    "path": "open/ic/license/2.0",
+    "path": "open/m/getLicense/2.0",
     "description": "行政许可",
+    "required": ["keyword"]
+  },
+  "recruitment": {
+    "path": "open/m/employments/3.0",
+    "description": "企业招聘",
     "required": ["keyword"]
   },
   "court_register": {
