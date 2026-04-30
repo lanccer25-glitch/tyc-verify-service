@@ -168,5 +168,45 @@
     "path": "open/jr/bankruptcy/detail/2.0",
     "description": "破产重整详情",
     "required": ["gid", "uuid"]
+  },
+  "zhixing": {
+    "path": "open/jr/zhixinginfo/2.0",
+    "description": "被执行人（现行）",
+    "required": ["keyword"]
+  },
+  "zhixing_history": {
+    "path": "open/hi/zhixing/2.0",
+    "description": "历史被执行人",
+    "required": ["keyword"]
+  },
+  "dishonest": {
+    "path": "open/jr/dishonest/2.0",
+    "description": "失信人（现行）",
+    "required": ["keyword"]
+  },
+  "dishonest_history": {
+    "path": "open/hi/dishonest/2.0",
+    "description": "历史失信人",
+    "required": ["keyword"]
+  },
+  "consumption_restriction": {
+    "path": "open/jr/consumptionRestriction/2.0",
+    "description": "限制消费令",
+    "required": ["keyword"]
+  },
+  "end_case": {
+    "path": "open/jr/endCase/2.0",
+    "description": "终本案件",
+    "required": ["keyword"]
+  },
+  "judicial_case": {
+    "path": "open/jr/judicialCase/2.0",
+    "description": "司法解析",
+    "required": ["keyword"]
+  },
+  "restricted_outbound": {
+    "path": "open/jr/restrictedOutbound",
+    "description": "限制出境",
+    "required": ["keyword"]
   }
 }
