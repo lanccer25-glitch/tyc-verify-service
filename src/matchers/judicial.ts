@@ -34,7 +34,6 @@ export function matchJudicial(
   let best = { score: 0, item: null as any, dateHit: false };
 
   for (const it of items) {
-    // 从每条记录里凑一个"标题 + 内容"文本
     const itText = [
       it.title, it.caseReason, it.caseNo, it.content,
       it.execCourtName, it.courtName, it.partyInfo,
@@ -68,4 +67,56 @@ export function matchJudicial(
     reason: `共 ${items.length} 条 ${subtype} 记录，但与短讯正文重叠度低（最高 ${(best.score * 100).toFixed(0)}%）`,
     hint: '可能是重名企业，或天眼查入库延迟',
   };
+}
+
+function tableRow(cells: string[]) {
+  return {
+    type: 'table_row' as const,
+    table_row: {
+      cells: cells.map((v) => [
+        { type: 'text' as const, text: { content: v || '-' } },
+      ]),
+    },
+  };
+}
+
+function pick(o: any, ...keys: string[]): string {
+  for (const k of keys) if (o?.[k] != null) return String(o[k]).slice(0, 100);
+  return '-';
+}
+
+export function formatJudicialBlocks(items: any[]): any[] {
+  if (!items.length) return [];
+  const top = items.slice(0, 20);
+  const rows = [
+    tableRow(['标题', '案号', '法院/机关', '日期', '金额/内容']),
+    ...top.map((it) =>
+      tableRow([
+        pick(it, 'title', 'caseReason', 'partyInfo').slice(0, 40),
+        pick(it, 'caseNo'),
+        pick(it, 'courtName', 'execCourtName'),
+        pick(it, 'publishDate', 'startDate', 'caseCreateTime', 'regDate'),
+        pick(it, 'execMoney', 'content').slice(0, 80),
+      ]),
+    ),
+  ];
+  return [
+    {
+      type: 'heading_3',
+      heading_3: {
+        rich_text: [
+          { type: 'text', text: { content: `⚖️ 记录（共 ${items.length} 条，展示前 ${top.length}）` } },
+        ],
+      },
+    },
+    {
+      type: 'table',
+      table: {
+        table_width: 5,
+        has_column_header: true,
+        has_row_header: false,
+        children: rows,
+      },
+    },
+  ];
 }

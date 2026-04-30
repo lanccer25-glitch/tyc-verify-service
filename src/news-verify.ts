@@ -5,7 +5,7 @@ import { callEndpoint, getEndpointPath } from './tyc-endpoints';
 import { matchBidding } from './matchers/bidding';
 import { matchPatent } from './matchers/patent';
 import { matchInvestment } from './matchers/investment';
-import { matchJudicial } from './matchers/judicial';
+import { matchJudicial, formatJudicialBlocks } from './matchers/judicial';
 import { matchImportExport } from './matchers/import-export';
 import { matchCustomer } from './matchers/customer';
 import { matchLicense } from './matchers/license';
@@ -20,6 +20,7 @@ export interface VerifyReport {
   reason: string;
   hint?: string;
   baseinfo?: TycBaseInfo;
+  detailBlocks?: any[];
 }
 
 function endpointPath(key: EndpointKey | string): string {
@@ -117,28 +118,28 @@ export async function verifyNews(
 
     case 'judicial_announcement': {
       const items = await fetchItems('judicial_announcement', companyName);
-      return wrap(path, endpoint, items,
-        matchJudicial(newsText, items, 'announcement'), await baseinfoPromise);
+      const m = matchJudicial(newsText, items, 'announcement');
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
     }
     case 'judicial_court_notice': {
       const items = await fetchItems('judicial_court_notice', companyName);
-      return wrap(path, endpoint, items,
-        matchJudicial(newsText, items, 'court_notice'), await baseinfoPromise);
+      const m = matchJudicial(newsText, items, 'court_notice');
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
     }
     case 'judicial_zhixing': {
       const items = await fetchItems('judicial_zhixing', companyName);
-      return wrap(path, endpoint, items,
-        matchJudicial(newsText, items, 'zhixing'), await baseinfoPromise);
+      const m = matchJudicial(newsText, items, 'zhixing');
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
     }
     case 'judicial_restriction': {
       const items = await fetchItems('judicial_restriction', companyName);
-      return wrap(path, endpoint, items,
-        matchJudicial(newsText, items, 'restriction'), await baseinfoPromise);
+      const m = matchJudicial(newsText, items, 'restriction');
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
     }
     case 'judicial_dishonest': {
       const items = await fetchItems('judicial_dishonest', companyName);
-      return wrap(path, endpoint, items,
-        matchJudicial(newsText, items, 'dishonest'), await baseinfoPromise);
+      const m = matchJudicial(newsText, items, 'dishonest');
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
     }
 
     case 'import_export': {
