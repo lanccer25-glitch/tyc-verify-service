@@ -6,8 +6,10 @@ import { getRateLimitUsage } from './tyc-api';
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
 export const verifyRouter = Router();
 
-function tsToDate(ts?: number): string {
-  return ts ? new Date(ts).toISOString().slice(0, 10) : '-';
+function tsToDate(ts?: number | string): string {
+  if (ts == null || ts === '') return '-';
+  const d = new Date(typeof ts === 'string' ? Number(ts) || ts : ts);
+  return isNaN(d.getTime()) ? '-' : d.toISOString().slice(0, 10);
 }
 
 function buildTableRow(label: string, value: string) {

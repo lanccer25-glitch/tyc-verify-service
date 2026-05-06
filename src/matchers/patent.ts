@@ -1,7 +1,9 @@
 import { PatentItem } from '../tyc-types';
 
-function tsToDate(ts?: number): string {
-  return ts ? new Date(ts).toISOString().slice(0, 10) : '-';
+function tsToDate(ts?: number | string): string {
+  if (ts == null || ts === '') return '-';
+  const d = new Date(typeof ts === 'string' ? Number(ts) || ts : ts);
+  return isNaN(d.getTime()) ? '-' : d.toISOString().slice(0, 10);
 }
 
 function tableRow(cells: string[]) {
