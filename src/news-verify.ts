@@ -9,6 +9,7 @@ import { matchJudicial, formatJudicialBlocks } from './matchers/judicial';
 import { matchImportExport, formatImportExportBlocks } from './matchers/import-export';
 import { matchCustomer, formatCustomerBlocks } from './matchers/customer';
 import { matchLicense, formatLicenseBlocks } from './matchers/license';
+import { matchPersonnel, formatPersonnelBlocks } from './matchers/personnel';
 import { queryBaseInfo, TycBaseInfo } from './tyc-api';
 import { formatUniversalBlocks } from './matchers/universal';
 
@@ -196,6 +197,12 @@ export async function verifyNews(
       const items = await fetchItems('taxCredit', companyName);
       const m = { matched: items.length > 0, reason: `税务评级 ${items.length} 条记录`, matchedItem: items[0] };
       return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatUniversalBlocks(items) };
+    }
+
+    case 'personnel': {
+      const items = await fetchItems('staff', companyName);
+      const m = matchPersonnel(newsText, items);
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatPersonnelBlocks(items) };
     }
 
     case 'baseinfo': {

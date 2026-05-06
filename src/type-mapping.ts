@@ -19,6 +19,7 @@ export type EndpointKey =
   | 'customer_supplier'
   | 'license'
   | 'taxCredit'
+  | 'personnel'
   | 'baseinfo';
 
 /** Layer 1：精确查表（基于 2026-04-17 生产数据 23 枚举） */
@@ -56,6 +57,9 @@ export const TYPE_TO_ENDPOINT: Record<string, EndpointKey> = {
 
   // 税务评级
   '新增税务评级': 'taxCredit',
+
+  // 人员变更
+  '主要人员变更': 'personnel',
 
   // 主体变更类（baseinfo 兜底）
   '企业地址变更':   'baseinfo',
@@ -95,6 +99,9 @@ const FALLBACK_PATTERNS: Array<[RegExp, EndpointKey]> = [
 
   // 行政许可
   [/行政许可|行政处罚/, 'license'],
+
+  // 人员变更
+  [/人员变更|董监高|高管变更|任职|法人变更|法定代表人变更/, 'personnel'],
 
   // 主体变更（最终兜底）
   [/变更|注销|吊销|增加|减少/, 'baseinfo'],
