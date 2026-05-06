@@ -1,6 +1,7 @@
 # tyc-verify-service 完整文档
 
 > 生成时间: 2026-04-30  
+> 最后更新: 2026-05-06 — 对外投资反向排查 & 退出投资接入  
 > 服务器: 腾讯云 Lighthouse (VM-8-13-opencloudos)  
 > 运行端口: 3100  
 > PM2 进程名: tyc-verify
@@ -32,7 +33,7 @@ src/
     _util.ts          <- 文本匹配工具
     bidding.ts        <- 招投标匹配+格式化
     patent.ts         <- 专利匹配+格式化
-    investment.ts     <- 投资匹配+格式化
+    investment.ts     <- 投资匹配+格式化（含反向排查 & 历史退出）
     judicial.ts       <- 司法匹配+格式化（5个子类，多字段映射）
     import-export.ts  <- 进出口匹配+格式化
     customer.ts       <- 客户/供应商匹配+格式化
@@ -93,13 +94,14 @@ case 'taxCredit': {
 
 ---
 
-## 5. Verify 流程支持的 14 种类型
+## 5. Verify 流程支持的类型
 
 | 中文动态类型 | API key | 有详情块 |
 |-------------|---------|---------|
 | 新增招投标 | bidding | YES |
 | 公开发明公布 | patent | YES |
-| 新增对外投资/退出/持股变化 | investment | YES |
+| 新增对外投资/持股比例上升/下降 | investment | YES |
+| 退出对外投资 | investment_history | YES（含退出时间） |
 | 新增开庭公告 | judicial_announcement | YES |
 | 新增法院公告/裁判文书/起诉状副本 | judicial_court_notice | YES |
 | 被列入被执行人 | judicial_zhixing | YES |
@@ -116,10 +118,21 @@ case 'taxCredit': {
 
 ## 6. 已知关键修正
 
-### 6.1 对外投资 (investment)
-- 路径: `open/ic/inverst/2.0` (天眼查实际路径，非拼写错误)
-- 参数: `keyword` (不是 name)
-- 2026-04-19 旧代码命中 14 条记录，已验证有效
+### 6.1 对外投资 (investment + investment_history) — 2026-05-06 更新
+
+对外投资核实拆分为两个独立端点：
+
+| Key | 路径 | 用途 | 关键字段 |
+|-----|------|------|---------|
+| `investment` | `open/ic/inverst/2.0` | 新增对外投资、持股变化 | estiblishTime(成立日), percent(比例) |
+| `investment_history` | `open/hi/invest/2.0` | 退出对外投资 | withdrawalTime(退出时间), percent(比例) |
+
+**反向排查机制**：核实"新增对外投资"时，会并行调 `investment_history` 接口。如果命中的被投资企业在历史接口中存在 `withdrawalTime`，报告会标注 ⚠️ 警告（"该企业已于 XX日 退出"），并在详情块追加退出时间表格。
+
+**已知限制**：
+- `paidinTime`（实缴出资时间）始终为 null，无法获取实际投资日期
+- `subscriptionTime`（认缴出资时间）仅为约定缴资截止日，非实际发生日期
+- 投资事件类接口（`open/oi/investEvent/2.0` 等）当前账号无权限
 
 ### 6.2 司法字段映射
 judicial.ts 的 `pick` 函数覆盖 5 种司法子类的所有字段变体:

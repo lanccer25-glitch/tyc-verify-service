@@ -4,7 +4,7 @@ import {
 import { callEndpoint, getEndpointPath } from './tyc-endpoints';
 import { matchBidding, formatBiddingBlocks } from './matchers/bidding';
 import { matchPatent, formatPatentBlocks } from './matchers/patent';
-import { matchInvestment, formatInvestmentBlocks } from './matchers/investment';
+import { matchInvestment, formatInvestmentBlocks, matchInvestmentHistory, formatInvestmentHistoryBlocks } from './matchers/investment';
 import { matchJudicial, formatJudicialBlocks } from './matchers/judicial';
 import { matchImportExport, formatImportExportBlocks } from './matchers/import-export';
 import { matchCustomer, formatCustomerBlocks } from './matchers/customer';
@@ -128,9 +128,21 @@ export async function verifyNews(
       return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatPatentBlocks(items) };
     }
     case 'investment': {
-      const items = await fetchItems('investment', companyName);
-      const m = matchInvestment(newsText, items);
-      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatInvestmentBlocks(items) };
+      const [items, historyItems] = await Promise.all([
+        fetchItems('investment', companyName),
+        fetchItems('investment_history', companyName).catch(() => []),
+      ]);
+      const m = matchInvestment(newsText, items, historyItems);
+      const blocks = formatInvestmentBlocks(items);
+      if ((m as any).exitedItems?.length) {
+        blocks.push(...formatInvestmentHistoryBlocks((m as any).exitedItems));
+      }
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: blocks };
+    }
+    case 'investment_history': {
+      const items = await fetchItems('investment_history', companyName);
+      const m = matchInvestmentHistory(newsText, items);
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatInvestmentHistoryBlocks(items) };
     }
 
     case 'judicial_announcement': {

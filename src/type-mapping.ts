@@ -8,6 +8,7 @@ export type EndpointKey =
   | 'bidding'
   | 'patent'
   | 'investment'
+  | 'investment_history'
   | 'judicial_announcement'   // 开庭
   | 'judicial_court_notice'   // 法院公告 / 裁判文书 / 送达
   | 'judicial_zhixing'        // 被执行
@@ -30,7 +31,7 @@ export const TYPE_TO_ENDPOINT: Record<string, EndpointKey> = {
 
   // 对外投资 / 股权
   '新增对外投资': 'investment',
-  '退出对外投资': 'investment',
+  '退出对外投资': 'investment_history',
   '持股比例上升': 'investment',
   '持股比例下降': 'investment',
 
@@ -82,6 +83,7 @@ const FALLBACK_PATTERNS: Array<[RegExp, EndpointKey]> = [
   [/专利|发明|实用新型|外观设计/, 'patent'],
 
   // 对外投资 / 股权
+  [/退出对外|退出投资/, 'investment_history'],
   [/对外投资|股东|入股|控股|参股|持股比例/, 'investment'],
 
   // 客户/供应商

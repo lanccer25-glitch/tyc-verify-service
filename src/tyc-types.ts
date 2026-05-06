@@ -31,5 +31,8 @@ export interface InvestmentItem {
   estiblishTime?: number;
   percent?: string;
   amount?: string;
+  withdrawalTime?: number;
+  pencertileScore?: number;
+  legalPersonId?: number;
   [key: string]: unknown;
 }

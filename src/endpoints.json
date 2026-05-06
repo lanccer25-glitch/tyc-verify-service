@@ -114,6 +114,11 @@
     "description": "对外投资",
     "required": ["keyword"]
   },
+  "investment_history": {
+    "path": "open/hi/invest/2.0",
+    "description": "历史对外投资",
+    "required": ["keyword"]
+  },
   "findTzanli": {"path": "open/cd/findTzanli/2.0", "required": ["keyword"]},
   "searchBrandAndAgency": {"path": "open/cd/searchBrandAndAgency/2.0", "required": ["word"]},
   "investOrg": {"path": "open/cd/investOrg/2.0", "required": ["keyword"]},
