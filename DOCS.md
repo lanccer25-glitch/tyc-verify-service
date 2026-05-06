@@ -1,7 +1,7 @@
 # tyc-verify-service 完整文档
 
 > 生成时间: 2026-04-30  
-> 最后更新: 2026-05-06 — 对外投资反向排查 & 退出投资接入  
+> 最后更新: 2026-05-06 — 对外投资反向排查 / 司法表修复 / 主要人员 & 股东接入 / 失败标红  
 > 服务器: 腾讯云 Lighthouse (VM-8-13-opencloudos)  
 > 运行端口: 3100  
 > PM2 进程名: tyc-verify
@@ -34,10 +34,12 @@ src/
     bidding.ts        <- 招投标匹配+格式化
     patent.ts         <- 专利匹配+格式化
     investment.ts     <- 投资匹配+格式化（含反向排查 & 历史退出）
-    judicial.ts       <- 司法匹配+格式化（5个子类，多字段映射）
+    judicial.ts       <- 司法匹配+格式化（5个子类，大小写双字段映射 + 案号提取）
     import-export.ts  <- 进出口匹配+格式化
     customer.ts       <- 客户/供应商匹配+格式化
     license.ts        <- 行政许可匹配+格式化
+    personnel.ts      <- 主要人员匹配+格式化（人名/职位文本比对）
+    shareholder.ts    <- 股东/股权匹配+格式化（股东名/持股比例比对）
     universal.ts      <- 通用格式化（自动检测数据结构生成表格）
 ```
 
@@ -96,23 +98,25 @@ case 'taxCredit': {
 
 ## 5. Verify 流程支持的类型
 
-| 中文动态类型 | API key | 有详情块 |
-|-------------|---------|---------|
-| 新增招投标 | bidding | YES |
-| 公开发明公布 | patent | YES |
-| 新增对外投资/持股比例上升/下降 | investment | YES |
-| 退出对外投资 | investment_history | YES（含退出时间） |
-| 新增开庭公告 | judicial_announcement | YES |
-| 新增法院公告/裁判文书/起诉状副本 | judicial_court_notice | YES |
-| 被列入被执行人 | judicial_zhixing | YES |
-| 被限制高消费 | judicial_restriction | YES |
-| 被列入失信被执行人 | judicial_dishonest | YES |
-| 新增进出口信用 | import_export | YES |
-| 新增客户 | customer_client | YES |
-| 新增供应商 | customer_supplier | YES |
-| 新增行政许可 | license | YES |
-| 新增税务评级 | taxCredit | YES (通用格式化) |
-| 主体变更类 | baseinfo | 仅主体 |
+| 中文动态类型 | API key | 对应端点 | 有详情块 |
+|-------------|---------|---------|---------|
+| 新增招投标 | bidding | open/m/bids/2.0 | YES |
+| 公开发明公布 | patent | open/ipr/patents/3.0 | YES |
+| 新增对外投资/持股比例上升/下降 | investment | open/ic/inverst/2.0 | YES（含反向排查） |
+| 退出对外投资 | investment_history | open/hi/invest/2.0 | YES（含退出时间） |
+| 新增开庭公告 | judicial_announcement | open/jr/ktannouncement/2.0 | YES |
+| 新增法院公告/裁判文书/起诉状副本/送达 | judicial_court_notice | open/jr/courtAnnouncement/2.0 | YES |
+| 被列入被执行人 | judicial_zhixing | open/jr/zhixinginfo/2.0 | YES |
+| 被限制高消费 | judicial_restriction | open/jr/consumptionRestriction/2.0 | YES |
+| 被列入失信被执行人 | judicial_dishonest | open/jr/dishonest/2.0 | YES |
+| 新增进出口信用 | import_export | open/m/importAndExport/2.0 | YES |
+| 新增客户 | customer_client | open/m/customer/2.0 | YES |
+| 新增供应商 | customer_supplier | open/m/supply/2.0 | YES |
+| 新增行政许可 | license | open/m/getLicense/2.0 | YES |
+| 新增税务评级 | taxCredit | open/m/taxCredit/2.0 | YES (通用格式化) |
+| 主要人员变更 | personnel | open/ic/staff/2.0 | YES（姓名+职位表） |
+| 新增股东/股东变更/股权变更 | shareholder | open/ic/holder/2.0 | YES（股东名+持股比例+日期） |
+| 企业地址/注册资本/经营范围/类型/法定代表人/相关公告变更 | baseinfo | open/ic/baseinfo/normal | 仅主体 |
 
 ---
 
@@ -134,15 +138,41 @@ case 'taxCredit': {
 - `subscriptionTime`（认缴出资时间）仅为约定缴资截止日，非实际发生日期
 - 投资事件类接口（`open/oi/investEvent/2.0` 等）当前账号无权限
 
-### 6.2 司法字段映射
-judicial.ts 的 `pick` 函数覆盖 5 种司法子类的所有字段变体:
-- 标题: litigant, party1, pname, bltntypename, caseReason
-- 案号: caseCode, caseno, caseNo, bltnno
-- 法院: court, execCourtName, courtcode, courtName
-- 日期: publishDate, publishdate, caseCreateTime, startDate
-- 金额: execMoney, content
+### 6.2 司法字段映射 — 2026-05-06 修复
 
-### 6.3 时间处理
+`courtAnnouncement` 和 `ktannouncement` 两套接口字段名不统一（大小写/命名差异）。`matchJudicial` 和 `formatJudicialBlocks` 均已做双映射：
+
+| 列 | 匹配字段 |
+|----|---------|
+| 标题 | `title`, `bltntypename`, `caseReason`, `reason`, `partyInfo` |
+| 案号 | 优先从 `content` 正则提取 `(2025)冀0391民初1110号` 格式；回退 `caseno` / `caseNo` |
+| 公告编号 | `bltnno` |
+| 法院/机关 | `courtcode`, `court`, `courtName`, `execCourtName` |
+| 日期 | `publishdate`, `publishDate`, `startDate`, `caseCreateTime`, `regDate`（`pickDate` 函数自动转 YYYY-MM-DD） |
+| 内容摘要 | `content` 前 80 字 |
+
+**特别说明**：`bltnno` 是天眼查公告编号（非法院案号），案号需从 `content` 正文提取。API 的 `caseno` 字段通常为空。
+
+### 6.3 主要人员变更 (personnel) — 2026-05-06 新增
+
+- 接口: `open/ic/staff/2.0` (key: `staff`)
+- 匹配: 遍历 `typeJoin` 人员列表，逐个比对姓名/职位是否出现在新闻中
+- 详情表格: `👥 主要人员` | 姓名 | 职位 |
+- 状态: 匹配到人名/职位 → `已核实`；否则 `无法验证`
+- 限制: API 只返回当前任职名单，无变更时间字段；`open/hi/roles`（历史董监高）账号无数据
+
+### 6.4 股东/股权变更 (shareholder) — 2026-05-06 新增
+
+- 接口: `open/ic/holder/2.0` (key: `holder`)
+- 匹配: 遍历股东列表，比对股东名称/持股比例是否出现在新闻中
+- 详情表格: `📊 股东信息` | 股东名称 | 持股比例 | 认缴额 | 持股日期(ftShareholding) |
+- 状态: 匹配到股东名/比例 → `已核实`；否则 `无法验证`
+
+### 6.5 核实结果标红 — 2026-05-06 新增
+
+`verify.ts` 中 `buildReportBlocks` 函数：当 `VerifyReport.status` 以"无法"或"已识别"开头时，`🔍 核实结果：` 标题以红色显示。
+
+### 6.6 时间处理
 tsToDate 已修复支持 number | string 类型，防止 Invalid time value
 
 ---
