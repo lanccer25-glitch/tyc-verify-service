@@ -10,6 +10,7 @@ import { matchImportExport, formatImportExportBlocks } from './matchers/import-e
 import { matchCustomer, formatCustomerBlocks } from './matchers/customer';
 import { matchLicense, formatLicenseBlocks } from './matchers/license';
 import { matchPersonnel, formatPersonnelBlocks } from './matchers/personnel';
+import { matchShareholder, formatShareholderBlocks } from './matchers/shareholder';
 import { queryBaseInfo, TycBaseInfo } from './tyc-api';
 import { formatUniversalBlocks } from './matchers/universal';
 
@@ -203,6 +204,12 @@ export async function verifyNews(
       const items = await fetchItems('staff', companyName);
       const m = matchPersonnel(newsText, items);
       return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatPersonnelBlocks(items) };
+    }
+
+    case 'shareholder': {
+      const items = await fetchItems('holder', companyName);
+      const m = matchShareholder(newsText, items);
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatShareholderBlocks(items) };
     }
 
     case 'baseinfo': {
