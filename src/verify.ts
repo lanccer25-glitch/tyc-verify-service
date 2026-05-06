@@ -25,12 +25,17 @@ function buildTableRow(label: string, value: string) {
 }
 
 function buildReportBlocks(report: VerifyReport, sourceUrl: string) {
+  const isWarn = report.status.startsWith('无法') || report.status.startsWith('已识别');
   const blocks: any[] = [
     { type: 'divider', divider: {} },
     {
       type: 'heading_3',
       heading_3: {
-        rich_text: [{ type: 'text', text: { content: `🔍 核实结果：${report.status}` } }],
+        rich_text: [{
+          type: 'text',
+          text: { content: `🔍 核实结果：${report.status}` },
+          annotations: isWarn ? { color: 'red' } : undefined,
+        }],
       },
     },
     {
