@@ -1,7 +1,7 @@
 # tyc-verify-service 完整文档
 
 > 生成时间: 2026-04-30  
-> 最后更新: 2026-05-06 — 对外投资反向排查 / 司法表修复 / 主要人员 & 股东接入 / 失败标红  
+> 最后更新: 2026-05-12 — 人员变更切换 hi_members 历史接口 / 限高字段映射 & subtype 条件表头 / 司法多字段补全  
 > 服务器: 腾讯云 Lighthouse (VM-8-13-opencloudos)  
 > 运行端口: 3100  
 > PM2 进程名: tyc-verify
@@ -34,11 +34,11 @@ src/
     bidding.ts        <- 招投标匹配+格式化
     patent.ts         <- 专利匹配+格式化
     investment.ts     <- 投资匹配+格式化（含反向排查 & 历史退出）
-    judicial.ts       <- 司法匹配+格式化（5个子类，大小写双字段映射 + 案号提取）
+    judicial.ts       <- 司法匹配+格式化（5个子类，多字段双映射，subtype 条件表头，限高专属格式）
     import-export.ts  <- 进出口匹配+格式化
     customer.ts       <- 客户/供应商匹配+格式化
     license.ts        <- 行政许可匹配+格式化
-    personnel.ts      <- 主要人员匹配+格式化（人名/职位文本比对）
+    personnel.ts      <- 人员变更匹配+格式化（基于 hi_members 历史记录，区分新增/退出/法定代表人变更）
     shareholder.ts    <- 股东/股权匹配+格式化（股东名/持股比例比对）
     universal.ts      <- 通用格式化（自动检测数据结构生成表格）
 ```
@@ -114,7 +114,7 @@ case 'taxCredit': {
 | 新增供应商 | customer_supplier | open/m/supply/2.0 | YES |
 | 新增行政许可 | license | open/m/getLicense/2.0 | YES |
 | 新增税务评级 | taxCredit | open/m/taxCredit/2.0 | YES (通用格式化) |
-| 主要人员变更 | personnel | open/ic/staff/2.0 | YES（姓名+职位表） |
+| 主要人员变更 | personnel | open/hi/members | YES（变更历史表：姓名/日期/变更类型） |
 | 新增股东/股东变更/股权变更 | shareholder | open/ic/holder/2.0 | YES（股东名+持股比例+日期） |
 | 企业地址/注册资本/经营范围/类型/法定代表人/相关公告变更 | baseinfo | open/ic/baseinfo/normal | 仅主体 |
 
@@ -138,28 +138,32 @@ case 'taxCredit': {
 - `subscriptionTime`（认缴出资时间）仅为约定缴资截止日，非实际发生日期
 - 投资事件类接口（`open/oi/investEvent/2.0` 等）当前账号无权限
 
-### 6.2 司法字段映射 — 2026-05-06 修复
+### 6.2 司法字段映射 — 2026-05-12 更新
 
-`courtAnnouncement` 和 `ktannouncement` 两套接口字段名不统一（大小写/命名差异）。`matchJudicial` 和 `formatJudicialBlocks` 均已做双映射：
+`courtAnnouncement`、`ktannouncement`、`consumptionRestriction` 等接口字段名不统一（大小写/命名差异）。`matchJudicial` 和 `formatJudicialBlocks` 均做多字段映射：
 
 | 列 | 匹配字段 |
 |----|---------|
-| 标题 | `title`, `bltntypename`, `caseReason`, `reason`, `partyInfo` |
-| 案号 | 优先从 `content` 正则提取 `(2025)冀0391民初1110号` 格式；回退 `caseno` / `caseNo` |
+| 标题 | `title`, `bltntypename`, `caseReason`, `reason`, `partyInfo`, `xname` |
+| 案号 | 优先从 `content` 正则提取 `(2025)冀0391民初1110号` 格式；回退 `caseCode` / `caseno` / `caseNo` |
 | 公告编号 | `bltnno` |
-| 法院/机关 | `courtcode`, `court`, `courtName`, `execCourtName` |
+| 法院/机关 | `courtcode`, `court`, `courtName`, `execCourtName`, `applicant` |
 | 日期 | `publishdate`, `publishDate`, `startDate`, `caseCreateTime`, `regDate`（`pickDate` 函数自动转 YYYY-MM-DD） |
-| 内容摘要 | `content` 前 80 字 |
+| 内容摘要 | `content`, `qyinfo` 前 80 字 |
 
-**特别说明**：`bltnno` 是天眼查公告编号（非法院案号），案号需从 `content` 正文提取。API 的 `caseno` 字段通常为空。
+**限制高消费 (restriction) 专属表头**：`formatJudicialBlocks` 根据 `subtype` 参数条件切换表头。
+- `restriction`: 5 列 `被限人 | 案号 | 申请人 | 日期 | 内容`，`xname`→被限人，`applicant`→申请人，`qyinfo`+`amountInvolved`→内容
+- 其他司法类: 6 列 `标题 | 案号 | 公告编号 | 法院/机关 | 日期 | 内容摘要`
 
-### 6.3 主要人员变更 (personnel) — 2026-05-06 新增
+**特别说明**：`bltnno` 是天眼查公告编号（非法院案号），案号需从 `content` 正文提取。API 的 `caseno` 字段通常为空。限制高消费接口不返回 `bltnno` 和法院字段，`applicant` 实为申请执行人（债权人）。
 
-- 接口: `open/ic/staff/2.0` (key: `staff`)
-- 匹配: 遍历 `typeJoin` 人员列表，逐个比对姓名/职位是否出现在新闻中
-- 详情表格: `👥 主要人员` | 姓名 | 职位 |
-- 状态: 匹配到人名/职位 → `已核实`；否则 `无法验证`
-- 限制: API 只返回当前任职名单，无变更时间字段；`open/hi/roles`（历史董监高）账号无数据
+### 6.3 主要人员变更 (personnel) — 2026-05-12 重写
+
+- **2026-05-12 重写**: 从 `open/ic/staff/2.0`（当前全员快照）切换为 `open/hi/members`（历史变更记录）
+- 匹配: 在 `pastStafferList`（人员变更）和 `pastLegalPersonList`（法定代表人变更）中搜索新闻提及的人名
+- 详情表格: `🔄 人员变更历史` | 姓名 | 日期 | 变更类型（人员新增/变更、人员退出、法定代表人变更） |
+- 变更类型判断: `toco != null` → 人员退出，`type === 'legal'` → 法定代表人变更，其他 → 人员新增/变更
+- 修正前问题: 原 `staff` 接口只返回当前全员名单，无法验证"变更"语义，展示也偏离用户预期
 
 ### 6.4 股东/股权变更 (shareholder) — 2026-05-06 新增
 
