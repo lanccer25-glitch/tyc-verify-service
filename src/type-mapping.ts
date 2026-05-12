@@ -18,6 +18,7 @@ export type EndpointKey =
   | 'customer_client'
   | 'customer_supplier'
   | 'license'
+  | 'punishment'
   | 'taxCredit'
   | 'personnel'
   | 'shareholder'
@@ -55,6 +56,9 @@ export const TYPE_TO_ENDPOINT: Record<string, EndpointKey> = {
 
   // 行政许可
   '新增行政许可': 'license',
+
+  // 行政处罚
+  '行政处罚': 'punishment',
 
   // 税务评级
   '新增税务评级': 'taxCredit',
@@ -104,7 +108,10 @@ const FALLBACK_PATTERNS: Array<[RegExp, EndpointKey]> = [
   [/进出口/, 'import_export'],
 
   // 行政许可
-  [/行政许可|行政处罚/, 'license'],
+  [/行政许可/, 'license'],
+
+  // 行政处罚
+  [/行政处罚/, 'punishment'],
 
   // 人员变更
   [/人员变更|董监高|高管变更|任职|法人变更|法定代表人变更/, 'personnel'],

@@ -9,6 +9,7 @@ import { matchJudicial, formatJudicialBlocks } from './matchers/judicial';
 import { matchImportExport, formatImportExportBlocks } from './matchers/import-export';
 import { matchCustomer, formatCustomerBlocks } from './matchers/customer';
 import { matchLicense, formatLicenseBlocks } from './matchers/license';
+import { matchPunishment, formatPunishmentBlocks } from './matchers/punishment';
 import { matchPersonnel, formatPersonnelBlocks } from './matchers/personnel';
 import { matchShareholder, formatShareholderBlocks } from './matchers/shareholder';
 import { queryBaseInfo, TycBaseInfo } from './tyc-api';
@@ -192,6 +193,12 @@ export async function verifyNews(
       const items = await fetchItems('license', companyName);
       const m = matchLicense(newsText, items);
       return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatLicenseBlocks(items) };
+    }
+
+    case 'punishment': {
+      const items = await fetchItems('punishment', companyName);
+      const m = matchPunishment(newsText, items);
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatPunishmentBlocks(items) };
     }
 
     case 'taxCredit': {
