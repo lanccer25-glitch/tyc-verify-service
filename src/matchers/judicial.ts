@@ -9,12 +9,6 @@ export type JudicialSubtype =
   | 'restriction'      // 限高
   | 'dishonest';       // 失信
 
-/**
- * 输入 newsText + items（任一司法接口返回的列表）
- * 匹配策略：
- *   1) 若 items 为空 → 无法验证
- *   2) 逐条算文本重叠度 + 日期命中，取最高分 ≥ 0.25 记为匹配
- */
 export function matchJudicial(
   newsText: string,
   items: any[],
@@ -35,13 +29,16 @@ export function matchJudicial(
 
   for (const it of items) {
     const itText = [
-      it.title, it.caseReason, it.caseNo, it.content,
-      it.execCourtName, it.courtName, it.partyInfo,
+      it.title, it.bltntypename, it.caseReason, it.reason,
+      it.caseNo, it.caseno, it.bltnno, it.content,
+      it.execCourtName, it.courtcode, it.court, it.courtName,
+      it.partyInfo, it.party1, it.party2, it.litigant,
     ].filter(Boolean).join('|');
     const itGrams = toNgrams(itText, 3);
     const score = overlapScore(newsGrams, itGrams);
 
     const itDate =
+      tsToDate(it.publishdate) ||
       tsToDate(it.publishDate) ||
       tsToDate(it.startDate) ||
       tsToDate(it.caseCreateTime) ||
@@ -81,22 +78,45 @@ function tableRow(cells: string[]) {
 }
 
 function pick(o: any, ...keys: string[]): string {
-  for (const k of keys) if (o?.[k] != null) return String(o[k]).slice(0, 100);
+  for (const k of keys) {
+    const v = o?.[k];
+    if (v == null || v === '') continue;
+    return String(v).slice(0, 100);
+  }
   return '-';
+}
+
+function pickDate(o: any, ...keys: string[]): string {
+  for (const k of keys) {
+    const v = o?.[k];
+    if (v == null || v === '') continue;
+    const d = tsToDate(v);
+    if (d) return d;
+  }
+  return '-';
+}
+
+function extractCaseNo(o: any): string {
+  if (o?.content) {
+    const m = o.content.match(/[（(]\d{4}[）)][^。；(（),\n]{2,}号/);
+    if (m) return m[0].slice(0, 40);
+  }
+  return pick(o, 'caseno', 'caseNo');
 }
 
 export function formatJudicialBlocks(items: any[]): any[] {
   if (!items.length) return [];
   const top = items.slice(0, 20);
   const rows = [
-    tableRow(['标题', '案号', '法院/机关', '日期', '金额/内容']),
+    tableRow(['标题', '案号', '公告编号', '法院/机关', '日期', '内容摘要']),
     ...top.map((it) =>
       tableRow([
-        pick(it, 'title', 'caseReason', 'partyInfo').slice(0, 40),
-        pick(it, 'caseNo'),
-        pick(it, 'courtName', 'execCourtName'),
-        pick(it, 'publishDate', 'startDate', 'caseCreateTime', 'regDate'),
-        pick(it, 'execMoney', 'content').slice(0, 80),
+        pick(it, 'title', 'bltntypename', 'caseReason', 'reason', 'partyInfo').slice(0, 30),
+        extractCaseNo(it),
+        pick(it, 'bltnno'),
+        pick(it, 'courtcode', 'court', 'courtName', 'execCourtName'),
+        pickDate(it, 'publishdate', 'publishDate', 'startDate', 'caseCreateTime', 'regDate'),
+        pick(it, 'content').slice(0, 80),
       ]),
     ),
   ];
@@ -112,7 +132,7 @@ export function formatJudicialBlocks(items: any[]): any[] {
     {
       type: 'table',
       table: {
-        table_width: 5,
+        table_width: 6,
         has_column_header: true,
         has_row_header: false,
         children: rows,
