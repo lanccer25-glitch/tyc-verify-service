@@ -105,22 +105,31 @@ function extractCaseNo(o: any): string {
   return pick(o, 'caseCode', 'caseno', 'caseNo');
 }
 
-export function formatJudicialBlocks(items: any[]): any[] {
+export function formatJudicialBlocks(items: any[], subtype: JudicialSubtype): any[] {
   if (!items.length) return [];
   const top = items.slice(0, 20);
-  const rows = [
-    tableRow(['标题', '案号', '公告编号', '法院/机关', '日期', '内容摘要']),
-    ...top.map((it) =>
-      tableRow([
-        pick(it, 'title', 'xname', 'bltntypename', 'caseReason', 'reason', 'partyInfo').slice(0, 30),
-        extractCaseNo(it),
-        pick(it, 'bltnno'),
-        pick(it, 'courtcode', 'court', 'courtName', 'execCourtName', 'applicant'),
-        pickDate(it, 'publishdate', 'publishDate', 'startDate', 'caseCreateTime', 'regDate'),
-        pick(it, 'content', 'qyinfo').slice(0, 80),
-      ]),
-    ),
-  ];
+  const isRestriction = subtype === 'restriction';
+  const header = isRestriction
+    ? tableRow(['被限人', '案号', '申请人', '日期', '内容'])
+    : tableRow(['标题', '案号', '公告编号', '法院/机关', '日期', '内容摘要']);
+  const rows = top.map((it) =>
+    isRestriction
+      ? tableRow([
+          pick(it, 'xname', 'title'),
+          extractCaseNo(it),
+          pick(it, 'applicant'),
+          pickDate(it, 'publishDate', 'caseCreateTime'),
+          pick(it, 'qyinfo') + amountLabel(it),
+        ])
+      : tableRow([
+          pick(it, 'title', 'xname', 'bltntypename', 'caseReason', 'reason', 'partyInfo').slice(0, 30),
+          extractCaseNo(it),
+          pick(it, 'bltnno'),
+          pick(it, 'courtcode', 'court', 'courtName', 'execCourtName'),
+          pickDate(it, 'publishdate', 'publishDate', 'startDate', 'caseCreateTime', 'regDate'),
+          pick(it, 'content', 'qyinfo').slice(0, 80),
+        ]),
+  );
   return [
     {
       type: 'heading_3',
@@ -133,11 +142,16 @@ export function formatJudicialBlocks(items: any[]): any[] {
     {
       type: 'table',
       table: {
-        table_width: 6,
+        table_width: isRestriction ? 5 : 6,
         has_column_header: true,
         has_row_header: false,
-        children: rows,
+        children: [header, ...rows],
       },
     },
   ];
+}
+
+function amountLabel(o: any): string {
+  const v = o?.amountInvolved;
+  return (v != null && v !== 0) ? ` | 涉事金额: ${Number(v).toLocaleString()}元` : '';
 }

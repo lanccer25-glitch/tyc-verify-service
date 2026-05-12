@@ -151,27 +151,27 @@ export async function verifyNews(
     case 'judicial_announcement': {
       const items = await fetchItems('judicial_announcement', companyName);
       const m = matchJudicial(newsText, items, 'announcement');
-      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items, 'announcement') };
     }
     case 'judicial_court_notice': {
       const items = await fetchItems('judicial_court_notice', companyName);
       const m = matchJudicial(newsText, items, 'court_notice');
-      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items, 'court_notice') };
     }
     case 'judicial_zhixing': {
       const items = await fetchItems('judicial_zhixing', companyName);
       const m = matchJudicial(newsText, items, 'zhixing');
-      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items, 'zhixing') };
     }
     case 'judicial_restriction': {
       const items = await fetchItems('judicial_restriction', companyName);
       const m = matchJudicial(newsText, items, 'restriction');
-      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items, 'restriction') };
     }
     case 'judicial_dishonest': {
       const items = await fetchItems('judicial_dishonest', companyName);
       const m = matchJudicial(newsText, items, 'dishonest');
-      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items) };
+      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatJudicialBlocks(items, 'dishonest') };
     }
 
     case 'import_export': {
