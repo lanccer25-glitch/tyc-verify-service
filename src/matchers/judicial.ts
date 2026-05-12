@@ -30,9 +30,10 @@ export function matchJudicial(
   for (const it of items) {
     const itText = [
       it.title, it.bltntypename, it.caseReason, it.reason,
-      it.caseNo, it.caseno, it.bltnno, it.content,
+      it.caseNo, it.caseCode, it.caseno, it.bltnno, it.content,
       it.execCourtName, it.courtcode, it.court, it.courtName,
       it.partyInfo, it.party1, it.party2, it.litigant,
+      it.xname, it.qyinfo, it.applicant,
     ].filter(Boolean).join('|');
     const itGrams = toNgrams(itText, 3);
     const score = overlapScore(newsGrams, itGrams);
@@ -101,7 +102,7 @@ function extractCaseNo(o: any): string {
     const m = o.content.match(/[（(]\d{4}[）)][^。；(（),\n]{2,}号/);
     if (m) return m[0].slice(0, 40);
   }
-  return pick(o, 'caseno', 'caseNo');
+  return pick(o, 'caseCode', 'caseno', 'caseNo');
 }
 
 export function formatJudicialBlocks(items: any[]): any[] {
@@ -111,12 +112,12 @@ export function formatJudicialBlocks(items: any[]): any[] {
     tableRow(['标题', '案号', '公告编号', '法院/机关', '日期', '内容摘要']),
     ...top.map((it) =>
       tableRow([
-        pick(it, 'title', 'bltntypename', 'caseReason', 'reason', 'partyInfo').slice(0, 30),
+        pick(it, 'title', 'xname', 'bltntypename', 'caseReason', 'reason', 'partyInfo').slice(0, 30),
         extractCaseNo(it),
         pick(it, 'bltnno'),
-        pick(it, 'courtcode', 'court', 'courtName', 'execCourtName'),
+        pick(it, 'courtcode', 'court', 'courtName', 'execCourtName', 'applicant'),
         pickDate(it, 'publishdate', 'publishDate', 'startDate', 'caseCreateTime', 'regDate'),
-        pick(it, 'content').slice(0, 80),
+        pick(it, 'content', 'qyinfo').slice(0, 80),
       ]),
     ),
   ];
