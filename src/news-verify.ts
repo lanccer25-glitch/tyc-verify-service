@@ -208,9 +208,14 @@ export async function verifyNews(
     }
 
     case 'personnel': {
-      const items = await fetchItems('staff', companyName);
-      const m = matchPersonnel(newsText, items);
-      return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatPersonnelBlocks(items) };
+      const resp = await callEndpoint('hi_members', { keyword: companyName });
+      const result = (resp.error_code === 0 && resp.result) ? resp.result as any : {};
+      const changes: any[] = [
+        ...(result.pastStafferList || []).flat(),
+        ...(result.pastLegalPersonList || []),
+      ];
+      const m = matchPersonnel(newsText, result);
+      return { ...wrap(path, endpoint, changes, m, await baseinfoPromise), detailBlocks: formatPersonnelBlocks(result) };
     }
 
     case 'shareholder': {
