@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const TYC_BASE =
-  process.env.TYC_OPEN_API_BASE || '';
+  process.env.TYC_OPEN_API_BASE || 'http://open.api.tianyancha.com';
 const TYC_TOKEN = process.env.TYC_OPEN_API_TOKEN || '';
 
 const RATE_LIMIT = 200;
