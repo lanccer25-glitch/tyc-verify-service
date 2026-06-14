@@ -54,6 +54,16 @@
     "description": "股东信息",
     "required": ["keyword"]
   },
+  "holderList": {
+    "path": "open/ic/holderList/2.0",
+    "description": "股东出资",
+    "required": ["keyword"]
+  },
+  "holderChange": {
+    "path": "open/ic/holderChange/2.0",
+    "description": "股东变更",
+    "required": ["keyword"]
+  },
   "hi_members": {
     "path": "open/hi/members",
     "description": "集团成员",

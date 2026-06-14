@@ -35,8 +35,6 @@ export const TYPE_TO_ENDPOINT: Record<string, EndpointKey> = {
   // 对外投资 / 股权
   '新增对外投资': 'investment',
   '退出对外投资': 'investment_history',
-  '持股比例上升': 'investment',
-  '持股比例下降': 'investment',
 
   // 司法（细分）
   '新增开庭公告':           'judicial_announcement',
@@ -70,6 +68,8 @@ export const TYPE_TO_ENDPOINT: Record<string, EndpointKey> = {
   '新增股东': 'shareholder',
   '股东变更': 'shareholder',
   '股权变更': 'shareholder',
+  '持股比例上升': 'shareholder',
+  '持股比例下降': 'shareholder',
 
   // 主体变更类（baseinfo 兜底）
   '企业地址变更':   'baseinfo',

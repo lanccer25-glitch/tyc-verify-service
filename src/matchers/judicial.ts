@@ -34,6 +34,7 @@ export function matchJudicial(
       it.execCourtName, it.courtcode, it.court, it.courtName,
       it.partyInfo, it.party1, it.party2, it.litigant,
       it.xname, it.qyinfo, it.applicant,
+      it.pname, it.execMoney,
     ].filter(Boolean).join('|');
     const itGrams = toNgrams(itText, 3);
     const score = overlapScore(newsGrams, itGrams);
@@ -121,13 +122,13 @@ export function formatJudicialBlocks(items: any[], subtype: JudicialSubtype): an
           pickDate(it, 'publishDate', 'caseCreateTime'),
           pick(it, 'qyinfo') + amountLabel(it),
         ])
-      : tableRow([
-          pick(it, 'title', 'xname', 'bltntypename', 'caseReason', 'reason', 'partyInfo').slice(0, 30),
+       : tableRow([
+          pick(it, 'title', 'pname', 'xname', 'bltntypename', 'caseReason', 'reason', 'partyInfo').slice(0, 30),
           extractCaseNo(it),
           pick(it, 'bltnno'),
           pick(it, 'courtcode', 'court', 'courtName', 'execCourtName'),
           pickDate(it, 'publishdate', 'publishDate', 'startDate', 'caseCreateTime', 'regDate'),
-          pick(it, 'content', 'qyinfo').slice(0, 80),
+          pick(it, 'content', 'qyinfo').slice(0, 60) + moneyLabel(it),
         ]),
   );
   return [
@@ -154,4 +155,9 @@ export function formatJudicialBlocks(items: any[], subtype: JudicialSubtype): an
 function amountLabel(o: any): string {
   const v = o?.amountInvolved;
   return (v != null && v !== 0) ? ` | 涉事金额: ${Number(v).toLocaleString()}元` : '';
+}
+
+function moneyLabel(o: any): string {
+  const v = o?.execMoney;
+  return (v != null && v !== '' && v !== '0') ? ` | 执行标的: ${Number(v).toLocaleString()}元` : '';
 }

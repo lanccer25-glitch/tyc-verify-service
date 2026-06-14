@@ -219,7 +219,7 @@ export async function verifyNews(
     }
 
     case 'shareholder': {
-      const items = await fetchItems('holder', companyName);
+      const items = await fetchItems('holderChange', companyName);
       const m = matchShareholder(newsText, items);
       return { ...wrap(path, endpoint, items, m, await baseinfoPromise), detailBlocks: formatShareholderBlocks(items) };
     }
